@@ -140,6 +140,8 @@ src/radar/      config · data (descarga SODA y catálogo) · text (limpieza y l
 scripts/        01–10, un paso del pipeline cada uno
 app/app.py      demo en Streamlit
 llm/            re-etiquetado y aumento con Claude Code (ver llm/README.md)
+notebooks/      beto_colab.ipynb: BETO afinado en Colab (GPU) con el mismo split que el modelo lineal
+data/beto/      split congelado (train balanceado + test) para que la comparación con BETO sea justa
 data/gold/      ids del gold set y planillas de anotación
 reports/        métricas y salidas de cada paso
 tests/          simulador de Claude para probar llm/ sin gastar cuota
