@@ -104,10 +104,10 @@ Probado con Python 3.13, scikit-learn 1.9 y spaCy 3.8; se recomienda Python 3.13
 git clone https://github.com/davidm094/radar-secop && cd radar-secop
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-pip install https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.7.0/es_core_news_sm-3.7.0-py3-none-any.whl
+pip install --no-deps https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.7.0/es_core_news_sm-3.7.0-py3-none-any.whl
 ```
 
-Se fija el modelo de spaCy 3.7.0 porque es con el que se calcularon las cifras (con spaCy 3.8 avisa de versión, pero funciona).
+Se fija el modelo de spaCy 3.7.0 porque es con el que se calcularon las cifras (`--no-deps` evita que pip baje spaCy a 3.7; con spaCy 3.8 sale un aviso de versión, pero funciona).
 
 ## Cómo correrlo
 
