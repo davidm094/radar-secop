@@ -4,7 +4,7 @@ Las consultas y los juicios de relevancia son HUMANOS (nunca generados por el LL
 
 Paso 1 – armar el pool a juzgar:
     python scripts/10_evaluar_busqueda.py pool
-  lee data/consultas/consultas_pyme.csv (columnas: id, consulta) — unas 30 descripciones escritas por
+  lee data/consultas/consultas_pyme.xlsx (o .csv; columnas: id, consulta, autor) — unas 30 descripciones escritas por
   personas como las escribiría una pyme — y junta los top-10 de cuatro sistemas (léxico, semántico,
   familia y el híbrido de la app). Escribe data/consultas/juicios.xlsx con la columna 'relevante' vacía.
   El pool va barajado y sin decir qué sistema trajo cada proceso (juicio a ciegas).
@@ -30,7 +30,10 @@ SISTEMAS = {"lexico": (0, 1, 0), "semantico": (1, 0, 0), "familia": (0, 0, 1), "
 
 
 def rankings(k: int = 10) -> pd.DataFrame:
-    q = pd.read_csv(C / "consultas_pyme.csv")
+    xl = C / "consultas_pyme.xlsx"
+    q = (pd.read_excel(xl, dtype=str) if xl.exists() else
+         pd.read_csv(C / "consultas_pyme.csv", dtype=str, sep=None, engine="python", encoding="utf-8-sig"))
+    q = q.dropna(subset=["consulta"])
     p = pd.read_parquet(DATA_PROC / "procesos_idx.parquet")
     B = BuscadorProcesos(p, p.txt_lem.tolist(), p.texto.tolist(), embeddings=np.load(DATA_PROC / "procesos_emb.npy"))
     m = cargar("familia_v1")

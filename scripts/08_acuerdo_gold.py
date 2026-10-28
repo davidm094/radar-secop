@@ -3,7 +3,8 @@
 Entradas en data/gold/:
   gold_set_anotador_David.xlsx, gold_set_anotador_Dierick.xlsx   (hoja 'anotacion')
   gold_set_CLAVE_no_abrir.xlsx                                     (código declarado en SECOP)
-  gold_resuelto.csv  (opcional: item_id, familia_gold, no_clasificable, disputado) tras discutir desacuerdos
+  gold_resuelto.xlsx (opcional: item_id, familia_gold, no_clasificable, disputado) tras discutir desacuerdos;
+    se arma desde la plantilla que crea  python scripts/08_acuerdo_gold.py --desacuerdos
 y, si existe, data/llm/gold_claude.jsonl (salida de llm/reetiquetar.py sobre los mismos 300).
 
 Mide:
@@ -63,7 +64,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--modelos", nargs="+", default=["familia_v1"])
     ap.add_argument("--desacuerdos", action="store_true",
-                    help="solo kappa + lista de desacuerdos y plantilla de gold_resuelto.csv (no abre la clave ni Claude)")
+                    help="solo kappa + lista de desacuerdos y plantilla de gold_resuelto.xlsx (no abre la clave ni Claude)")
     args = ap.parse_args()
     MODELOS = args.modelos
     out = {}
@@ -86,9 +87,9 @@ def main():
                                   "no_clasificable": np.where(~dis & (A.fam == "NC"), "sí", ""),
                                   "disputado": "", "resuelto_en_discusion": np.where(dis, "pendiente", "")})
         plantilla.index.name = "item_id"
-        plantilla.to_csv(G / "gold_resuelto_plantilla.csv")
+        plantilla.to_excel(G / "gold_resuelto_plantilla.xlsx")
         print(f"{int(dis.sum())} desacuerdos -> data/gold/gold_desacuerdos.xlsx; "
-              f"plantilla -> data/gold/gold_resuelto_plantilla.csv")
+              f"plantilla -> data/gold/gold_resuelto_plantilla.xlsx (guárdela como gold_resuelto.xlsx)")
         return
     clave = pd.read_excel(G / "gold_set_CLAVE_no_abrir.xlsx").set_index("item_id")
     clave["fam_secop"] = clave.familia_declarada.astype(str).str.zfill(4)
@@ -100,13 +101,16 @@ def main():
     out["no_clasificable_por_anotador"] = {"David": float(A.nc.mean()), "Dierick": float(B.nc.mean())}
 
     # Etiqueta gold: la resuelta en la discusión si existe; si no, solo donde ambos coinciden
-    res = G / "gold_resuelto.csv"
+    res = G / "gold_resuelto.xlsx" if (G / "gold_resuelto.xlsx").exists() else G / "gold_resuelto.csv"
     if res.exists():
-        r = pd.read_csv(res, dtype=str).set_index("item_id")
+        if res.suffix == ".xlsx":
+            r = pd.read_excel(res, dtype=str).fillna("").set_index("item_id")
+        else:  # acepta , o ; (Excel en español)
+            r = pd.read_csv(res, dtype=str, sep=None, engine="python", encoding="utf-8-sig").fillna("").set_index("item_id")
         gold = r.familia_gold.map(fam4)
         gold[r.get("no_clasificable", "").astype(str).str.lower().isin(SI)] = "NC"
         gold[r.get("disputado", "").astype(str).str.lower().isin(SI)] = ""
-        out["fuente_gold"] = "gold_resuelto.csv"
+        out["fuente_gold"] = res.name
     else:
         gold = A.fam.where(A.fam == B.fam, "")
         out["fuente_gold"] = "coincidencias entre anotadores (desacuerdos excluidos)"

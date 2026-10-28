@@ -109,6 +109,18 @@ python -m spacy download es_core_news_sm
 
 ## Cómo correrlo
 
+**Para reproducir exactamente las cifras del documento** (recomendado), use la foto de datos del 14-oct-2026
+que trae el repo y sáltese los pasos 01 y 02 (SECOP cambia a diario, así que descargar de nuevo da otras cifras):
+
+```bash
+python scripts/00_usar_datos_congelados.py  # copia data/congelado/ a data/processed/ y data/raw/
+python scripts/03_entrenar_evaluar.py       # ~5 min; test balanceado B: macro-F1 0,407, top-3 0,759
+python scripts/07_indexar_procesos.py       # ~20 min
+streamlit run app/app.py
+```
+
+Para descargar datos nuevos desde cero:
+
 ```bash
 python scripts/01_descargar.py              # ~300k contratos 2025+, procesos abiertos y catálogo (20–40 min)
 python scripts/02_preparar.py               # limpieza y lematización
@@ -123,14 +135,16 @@ streamlit run app/app.py                    # demo en http://localhost:8501
 Con el gold set anotado y, opcionalmente, con Claude:
 
 ```bash
-python scripts/08_acuerdo_gold.py                               # necesita data/gold/*.xlsx anotados
+python scripts/08_acuerdo_gold.py --desacuerdos                 # kappa + desacuerdos, sin abrir la clave
+python scripts/08_acuerdo_gold.py                               # evaluación completa contra el gold set
+python scripts/11_revisar_discrepancias.py evaluar              # precisión de la alerta (revisión humana)
 python llm/reetiquetar.py --entrada data/gold/gold_set_anotador_David.xlsx --salida data/llm/gold_claude.jsonl
 python scripts/09_entrenar_con_llm.py                           # solo corre si kappa Claude–gold ≥ 0,61
 python scripts/10_evaluar_busqueda.py pool                      # luego marcar relevancia a mano
 python scripts/10_evaluar_busqueda.py evaluar
 ```
 
-Los datos y modelos no se suben al repositorio porque pesan más de 100 MB; se regeneran con los pasos 01 a 07. Los resultados (métricas, explicaciones, discrepancias) quedan en `reports/`.
+Los modelos y el índice no se suben al repositorio porque pesan más de 100 MB; se regeneran con los pasos 03 y 07. Los resultados (métricas, explicaciones, discrepancias) quedan en `reports/`.
 
 ## Estructura
 
