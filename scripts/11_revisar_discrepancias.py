@@ -22,9 +22,9 @@ VALIDOS = {"modelo", "secop", "ninguna", "no_clasificable"}
 
 def muestra(n: int = 100):
     d = pd.read_csv(REPORTS / "discrepancias.csv", dtype={"fam": str, "pred": str})
-    m = d.sample(min(n, len(d)), random_state=SEED).sort_values("conf", ascending=False)
+    m = d.sample(min(n, len(d)), random_state=SEED).sort_values("id_contrato")
     cols = ["id_contrato", "nombre_entidad", "objeto_del_contrato", "fam", "nombre_declarado", "pred",
-            "nombre_predicho", "conf"]
+            "nombre_predicho"]   # sin la confianza: no sesgar al revisor
     m[cols].assign(revision="", comentario="").to_excel(XLSX, index=False)
     print(f"{len(m)} contratos de {len(d)} -> {XLSX}")
 

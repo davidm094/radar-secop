@@ -4,7 +4,7 @@ Dos usos, en este orden:
   1) Validación: los mismos 300 contratos del gold set, con la misma información que ven los humanos
      (objeto, entidad, tipo de contrato; SIN el código declarado). Luego scripts/08_acuerdo_gold.py
      mide el acuerdo Claude–humanos.
-        python llm/reetiquetar.py --entrada data/gold/gold_set_anotador_David.xlsx --salida data/llm/gold_claude.jsonl
+        python llm/reetiquetar.py --entrada data/gold/gold_set_plantilla.xlsx --salida data/llm/gold_claude.jsonl
   2) Escala (solo si el acuerdo del paso 1 es alto): contratos del conjunto de ENTRENAMIENTO
      (nunca de test ni del gold set, para no evaluar con etiquetas del LLM).
         python llm/reetiquetar.py --entrenamiento 5000 --salida data/llm/train_claude.jsonl

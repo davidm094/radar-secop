@@ -15,3 +15,7 @@ data/llm/gold_claude.jsonl
 data/llm/piloto.jsonl
 # Clave del gold set: solo se sube al terminar la anotación
 data/gold/gold_set_CLAVE_no_abrir.xlsx
+# Planillas de los anotadores: se suben solo al terminar la tarea 5 (ver la guía)
+data/gold/gold_set_anotador_*.xlsx
+data/gold/gold_desacuerdos.xlsx
+data/gold/gold_resuelto*.xlsx

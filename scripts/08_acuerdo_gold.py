@@ -110,6 +110,11 @@ def main():
         gold = r.familia_gold.map(fam4)
         gold[r.get("no_clasificable", "").astype(str).str.lower().isin(SI)] = "NC"
         gold[r.get("disputado", "").astype(str).str.lower().isin(SI)] = ""
+        if "resuelto_en_discusion" in r:
+            disp = r.get("disputado", pd.Series("", index=r.index)).astype(str).str.strip().str.lower().isin(SI)
+            pend = r.index[(r.resuelto_en_discusion.astype(str).str.strip().str.lower() == "pendiente") & ~disp].tolist()
+            if pend:
+                sys.exit(f"{len(pend)} filas siguen en 'pendiente' en {res.name}: {pend[:10]}. Resuélvalas o márquelas disputado.")
         out["fuente_gold"] = res.name
     else:
         gold = A.fam.where(A.fam == B.fam, "")

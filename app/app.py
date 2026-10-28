@@ -1,7 +1,7 @@
 """Radar SECOP – demo en Streamlit.
 
 Ejecutar desde la raíz del repo:  streamlit run app/app.py
-Requiere haber corrido scripts/01..07 (modelo en models/ e índice en data/processed/).
+Requiere el modelo (scripts/03) y el índice de procesos (scripts/07); con datos congelados, antes scripts/00.
 """
 import json
 import sys
@@ -30,7 +30,10 @@ def recursos():
     modelo = cargar("familia_v1")
     nombres = familias_unspsc()
     c = pd.read_parquet(DATA_PROC / "contratos_prep.parquet",
-                        columns=["objeto_del_contrato", "nombre_entidad", "fam", "txt_lem"])
+                        columns=["id_contrato", "objeto_del_contrato", "nombre_entidad", "fam", "txt_lem"])
+    gold = ROOT / "data" / "gold" / "gold_ids.csv"     # el gold set nunca se muestra como ejemplo
+    if gold.exists():
+        c = c[~c.id_contrato.isin(set(pd.read_csv(gold).id_contrato))]
     c = c.sample(min(60_000, len(c)), random_state=0)
     vecinos = Vecinos(modelo, c.txt_lem.tolist(), c[["objeto_del_contrato", "nombre_entidad", "fam"]])
     return modelo, nombres, vecinos

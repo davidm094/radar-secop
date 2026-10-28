@@ -10,7 +10,7 @@
 # - Texto: el objeto del contrato sin fórmulas de contratación (sin lematizar: BERT tiene su propio tokenizador).
 # - Métricas: las mismas funciones del repo (`radar.evaluate.metricas`).
 #
-# Colab: Entorno de ejecución → Cambiar tipo → GPU T4. Con 3 épocas tarda unos 25–40 minutos (estimado, sin medir).
+# Colab: Entorno de ejecución → Cambiar tipo → GPU T4. Tiempo estimado (sin medir): 30–60 minutos.
 
 # %%
 import os, subprocess, sys
@@ -36,7 +36,7 @@ if SMOKE:
     MAX_LEN, BATCH, EPOCAS = 32, 8, 1
 torch.manual_seed(SEMILLA); np.random.seed(SEMILLA)
 dev = "cuda" if torch.cuda.is_available() else "cpu"
-print("dispositivo:", dev)
+print("dispositivo:", dev, "|", torch.cuda.get_device_name(0) if dev == "cuda" else "sin GPU")
 
 # %%
 d = pd.read_parquet(os.path.join(RAIZ, "data", "beto", "split_familia.parquet"))
@@ -99,7 +99,9 @@ te_bal = te[te.en_test_bal]
 filas = [metricas(m, te.texto_beto, te.fam, "test_natural")]
 if len(te_bal):
     filas.append(metricas(m, te_bal.texto_beto, te_bal.fam, "test_balanceado"))
-res = pd.DataFrame(filas).assign(variante="BETO_sin_formulas", modelo=MODELO, max_len=MAX_LEN, epocas=EPOCAS)
+res = pd.DataFrame(filas).assign(variante="BETO_sin_formulas", modelo=MODELO, max_len=MAX_LEN, epocas=EPOCAS, batch=BATCH,
+                                 gpu=torch.cuda.get_device_name(0) if dev == "cuda" else "cpu",
+                                 minutos_total=round((time.time() - t0) / 60, 1))
 print(res.round(3).to_string(index=False))
 
 # %% [markdown]

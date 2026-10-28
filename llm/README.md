@@ -21,10 +21,10 @@ pueden cortar y retomar.
 
 ```bash
 # 0) piloto barato: 20 contratos, revisar a mano la salida
-python llm/reetiquetar.py --entrada data/gold/gold_set_anotador_David.xlsx --salida data/llm/piloto.jsonl --limite 20
+python llm/reetiquetar.py --entrada data/gold/gold_set_plantilla.xlsx --salida data/llm/piloto.jsonl --limite 20
 
 # 1) los 300 del gold set (después de que los humanos terminen, o en paralelo: Claude no ve sus anotaciones)
-python llm/reetiquetar.py --entrada data/gold/gold_set_anotador_David.xlsx --salida data/llm/gold_claude.jsonl
+python llm/reetiquetar.py --entrada data/gold/gold_set_plantilla.xlsx --salida data/llm/gold_claude.jsonl
 python scripts/08_acuerdo_gold.py
 
 # 2) solo si kappa Claude–gold ≥ 0,61
@@ -54,7 +54,7 @@ claude -p --output-format json --json-schema <schemas/*.json> --system-prompt <p
 `tests/fake_claude.py` imita la salida de `claude -p`:
 
 ```bash
-RADAR_CLAUDE_CMD="python tests/fake_claude.py" python llm/reetiquetar.py --entrada data/gold/gold_set_anotador_David.xlsx --salida /tmp/prueba.jsonl --limite 25
+RADAR_CLAUDE_CMD="python tests/fake_claude.py" python llm/reetiquetar.py --entrada data/gold/gold_set_plantilla.xlsx --salida /tmp/prueba.jsonl --limite 25
 ```
 
 ## Qué reportar en el documento

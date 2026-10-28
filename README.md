@@ -98,14 +98,16 @@ La evaluación contra el gold set humano (paso 08) está pendiente de que termin
 
 ## Instalación
 
-Requiere Python 3.10 o superior. Probado con Python 3.13, scikit-learn 1.9 y spaCy 3.8.
+Probado con Python 3.13, scikit-learn 1.9 y spaCy 3.8; se recomienda Python 3.13 para obtener las mismas cifras.
 
 ```bash
 git clone https://github.com/davidm094/radar-secop && cd radar-secop
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python -m spacy download es_core_news_sm
+pip install https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.7.0/es_core_news_sm-3.7.0-py3-none-any.whl
 ```
+
+Se fija el modelo de spaCy 3.7.0 porque es con el que se calcularon las cifras (con spaCy 3.8 avisa de versión, pero funciona).
 
 ## Cómo correrlo
 
@@ -138,7 +140,7 @@ Con el gold set anotado y, opcionalmente, con Claude:
 python scripts/08_acuerdo_gold.py --desacuerdos                 # kappa + desacuerdos, sin abrir la clave
 python scripts/08_acuerdo_gold.py                               # evaluación completa contra el gold set
 python scripts/11_revisar_discrepancias.py evaluar              # precisión de la alerta (revisión humana)
-python llm/reetiquetar.py --entrada data/gold/gold_set_anotador_David.xlsx --salida data/llm/gold_claude.jsonl
+python llm/reetiquetar.py --entrada data/gold/gold_set_plantilla.xlsx --salida data/llm/gold_claude.jsonl
 python scripts/09_entrenar_con_llm.py                           # solo corre si kappa Claude–gold ≥ 0,61
 python scripts/10_evaluar_busqueda.py pool                      # luego marcar relevancia a mano
 python scripts/10_evaluar_busqueda.py evaluar
@@ -151,7 +153,7 @@ Los modelos y el índice no se suben al repositorio porque pesan más de 100 MB;
 ```
 src/radar/      config · data (descarga SODA y catálogo) · text (limpieza y lematización) · labels (niveles,
                 split, balanceo, exclusión del gold) · model · evaluate (métricas y ECE) · explain · search
-scripts/        01–10, un paso del pipeline cada uno
+scripts/        00–11, un paso del pipeline cada uno (00 = datos congelados, 11 = revisión de discrepancias)
 app/app.py      demo en Streamlit
 llm/            re-etiquetado y aumento con Claude Code (ver llm/README.md)
 notebooks/      beto_colab.ipynb: BETO afinado en Colab (GPU) con el mismo split que el modelo lineal
