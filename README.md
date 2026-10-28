@@ -103,7 +103,7 @@ Probado con Python 3.13, scikit-learn 1.9 y spaCy 3.8; se recomienda Python 3.13
 ```bash
 git clone https://github.com/davidm094/radar-secop && cd radar-secop
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r requirements-lock.txt   # versiones exactas usadas (o requirements.txt para las últimas)
 pip install --no-deps https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.7.0/es_core_news_sm-3.7.0-py3-none-any.whl
 ```
 
