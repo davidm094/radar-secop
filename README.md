@@ -101,7 +101,7 @@ La evaluación contra el gold set humano (paso 08) está pendiente de que termin
 Requiere Python 3.10 o superior. Probado con Python 3.13, scikit-learn 1.9 y spaCy 3.8.
 
 ```bash
-git clone <url-del-repo> radar-secop && cd radar-secop
+git clone https://github.com/davidm094/radar-secop && cd radar-secop
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python -m spacy download es_core_news_sm
