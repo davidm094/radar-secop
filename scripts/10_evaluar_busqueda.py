@@ -41,16 +41,17 @@ def rankings(k: int = 10) -> pd.DataFrame:
         probs = {m.classes_[i]: float(P[i]) for i in np.argsort(-P)[:3]}
         for sis, (we, wt, wf) in SISTEMAS.items():
             res = B.buscar(r.consulta, qp, probs, k=k, w_emb=we, w_tfidf=wt, w_fam=wf)
-            for pos, (pid, txt) in enumerate(zip(res.id_del_proceso, res.texto), 1):
+            for pos, x in enumerate(res.itertuples(), 1):
                 filas.append({"consulta_id": r.id, "consulta": r.consulta, "sistema": sis, "posicion": pos,
-                              "id_del_proceso": pid, "texto": txt})
+                              "id_del_proceso": x.id_del_proceso, "texto": x.texto, "entidad": x.entidad,
+                              "url": x.urlproceso})
     return pd.DataFrame(filas)
 
 
 def pool():
     R = rankings()
     R.to_csv(C / "rankings.csv", index=False)
-    J = R.drop_duplicates(["consulta_id", "id_del_proceso"])[["consulta_id", "consulta", "id_del_proceso", "texto"]]
+    J = R.drop_duplicates(["consulta_id", "id_del_proceso"])[["consulta_id", "consulta", "id_del_proceso", "texto", "entidad", "url"]]
     J = J.sample(frac=1, random_state=SEED).sort_values("consulta_id", kind="stable").assign(relevante="")
     J.to_excel(C / "juicios.xlsx", index=False)
     print(f"{J.consulta_id.nunique()} consultas, {len(J)} pares a juzgar → {C / 'juicios.xlsx'}")

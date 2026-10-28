@@ -62,9 +62,34 @@ def main():
     global MODELOS
     ap = argparse.ArgumentParser()
     ap.add_argument("--modelos", nargs="+", default=["familia_v1"])
-    MODELOS = ap.parse_args().modelos
+    ap.add_argument("--desacuerdos", action="store_true",
+                    help="solo kappa + lista de desacuerdos y plantilla de gold_resuelto.csv (no abre la clave ni Claude)")
+    args = ap.parse_args()
+    MODELOS = args.modelos
     out = {}
     A, B = leer_anotador("David"), leer_anotador("Dierick")
+    vacias = {n: int((d.fam == "").sum()) for n, d in (("David", A), ("Dierick", B))}
+    if any(vacias.values()):
+        print(f"Aviso: filas sin familia ni 'no clasificable' por anotador: {vacias}")
+
+    if args.desacuerdos:
+        ind = A.index[~A.fase.astype(str).str.startswith("1")]
+        print("kappa familia (G031-G300):", kappa(A.loc[ind, "fam"], B.loc[ind, "fam"]))
+        print("kappa segmento:", kappa(A.loc[ind, "fam"].str[:2], B.loc[ind, "fam"].str[:2]))
+        dis = A.fam != B.fam
+        tabla = pd.DataFrame({"objeto_del_contrato": A.objeto_del_contrato, "nombre_entidad": A.nombre_entidad,
+                              "David": A.familia_anotada, "David_2": A.segunda_familia, "David_comentario": A.comentario,
+                              "Dierick": B.familia_anotada, "Dierick_2": B.segunda_familia,
+                              "Dierick_comentario": B.comentario})
+        tabla[dis].to_excel(G / "gold_desacuerdos.xlsx")
+        plantilla = pd.DataFrame({"familia_gold": A.fam.where(~dis & (A.fam != "NC"), ""),
+                                  "no_clasificable": np.where(~dis & (A.fam == "NC"), "sí", ""),
+                                  "disputado": "", "resuelto_en_discusion": np.where(dis, "pendiente", "")})
+        plantilla.index.name = "item_id"
+        plantilla.to_csv(G / "gold_resuelto_plantilla.csv")
+        print(f"{int(dis.sum())} desacuerdos -> data/gold/gold_desacuerdos.xlsx; "
+              f"plantilla -> data/gold/gold_resuelto_plantilla.csv")
+        return
     clave = pd.read_excel(G / "gold_set_CLAVE_no_abrir.xlsx").set_index("item_id")
     clave["fam_secop"] = clave.familia_declarada.astype(str).str.zfill(4)
 
