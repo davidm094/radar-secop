@@ -9,13 +9,15 @@ __pycache__/
 .ipynb_checkpoints/
 .DS_Store
 reports/log_*.txt
-# Etiquetas de Claude sobre el gold set: NO publicar hasta que los dos anotadores terminen
-# (verlas antes sesgaría la anotación humana)
-data/llm/gold_claude.jsonl
 data/llm/piloto.jsonl
-# Clave del gold set: solo se sube al terminar la anotación
-data/gold/gold_set_CLAVE_no_abrir.xlsx
-# Planillas de los anotadores: se suben solo al terminar la tarea 5 (ver la guía)
+# Planillas de trabajo de los anotadores (las etiquetas finales están en data/gold/gold_anotaciones.csv)
 data/gold/gold_set_anotador_*.xlsx
+data/gold/gold_set_repeticion_*.xlsx
+data/gold/gold_set_solo_humanos.xlsx
 data/gold/gold_desacuerdos.xlsx
 data/gold/gold_resuelto*.xlsx
+.venv/
+data/gold/correcciones_gold*.xlsx
+# Skills de agentes (enlaces a .venv, no sirven fuera de esta máquina)
+.agents/
+.claude/

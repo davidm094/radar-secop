@@ -1,0 +1,297 @@
+{
+  "n": 300,
+  "n_humano": 215,
+  "acuerdo_entre_fuentes": {
+    "humano__claude_sonnet": {
+      "n": 214,
+      "familia": {
+        "acuerdo": 0.266,
+        "kappa": 0.246
+      },
+      "segmento": {
+        "acuerdo": 0.449,
+        "kappa": 0.407
+      }
+    },
+    "humano__claude_fable": {
+      "n": 215,
+      "familia": {
+        "acuerdo": 0.274,
+        "kappa": 0.257
+      },
+      "segmento": {
+        "acuerdo": 0.456,
+        "kappa": 0.413
+      }
+    },
+    "humano__secop": {
+      "n": 215,
+      "familia": {
+        "acuerdo": 0.144,
+        "kappa": 0.125
+      },
+      "segmento": {
+        "acuerdo": 0.367,
+        "kappa": 0.304
+      }
+    },
+    "claude_sonnet__claude_fable": {
+      "n": 299,
+      "familia": {
+        "acuerdo": 0.726,
+        "kappa": 0.718
+      },
+      "segmento": {
+        "acuerdo": 0.813,
+        "kappa": 0.797
+      }
+    },
+    "claude_sonnet__secop": {
+      "n": 299,
+      "familia": {
+        "acuerdo": 0.221,
+        "kappa": 0.208
+      },
+      "segmento": {
+        "acuerdo": 0.438,
+        "kappa": 0.384
+      }
+    },
+    "claude_fable__secop": {
+      "n": 300,
+      "familia": {
+        "acuerdo": 0.223,
+        "kappa": 0.213
+      },
+      "segmento": {
+        "acuerdo": 0.427,
+        "kappa": 0.37
+      }
+    },
+    "claude_sonnet__claude_fable__solo_215_humanos": {
+      "n": 214,
+      "familia": {
+        "acuerdo": 0.701,
+        "kappa": 0.693
+      },
+      "segmento": {
+        "acuerdo": 0.804,
+        "kappa": 0.788
+      }
+    }
+  },
+  "control_ciego_60": {
+    "humano__claude_fable": {
+      "n": 60,
+      "familia": {
+        "acuerdo": 0.217,
+        "kappa": 0.2
+      },
+      "segmento": {
+        "acuerdo": 0.367,
+        "kappa": 0.325
+      }
+    },
+    "humano__claude_sonnet": {
+      "n": 60,
+      "familia": {
+        "acuerdo": 0.183,
+        "kappa": 0.166
+      },
+      "segmento": {
+        "acuerdo": 0.383,
+        "kappa": 0.346
+      }
+    },
+    "claude_sonnet__claude_fable": {
+      "n": 60,
+      "familia": {
+        "acuerdo": 0.633,
+        "kappa": 0.623
+      },
+      "segmento": {
+        "acuerdo": 0.75,
+        "kappa": 0.732
+      }
+    }
+  },
+  "no_clasificable": {
+    "humano": 0,
+    "claude_sonnet": 9,
+    "claude_fable": 17
+  },
+  "contra_referencia": {
+    "H_humano": {
+      "n": 215,
+      "error_secop": {
+        "global": 0.856,
+        "por_grupo": {
+          "8011": {
+            "error": 0.987,
+            "n": 77
+          },
+          "salud": {
+            "error": 0.471,
+            "n": 34
+          },
+          "otras": {
+            "error": 0.885,
+            "n": 104
+          }
+        },
+        "error_a_nivel_segmento": 0.633
+      },
+      "modelo_app": {
+        "accuracy": 0.228,
+        "macro_f1": 0.11,
+        "top3": 0.405,
+        "accuracy_segmento": 0.372,
+        "acuerdo_del_modelo_con_secop_mismos_items": 0.437,
+        "referencia_fuera_de_las_175_familias": 0.102,
+        "por_grupo": {
+          "8011": {
+            "accuracy": 0.195,
+            "top3": 0.403
+          },
+          "salud": {
+            "accuracy": 0.529,
+            "top3": 0.735
+          },
+          "otras": {
+            "accuracy": 0.154,
+            "top3": 0.298
+          }
+        }
+      }
+    },
+    "C_consenso_claude": {
+      "n": 208,
+      "error_secop": {
+        "global": 0.731,
+        "por_grupo": {
+          "8011": {
+            "error": 0.976,
+            "n": 83
+          },
+          "salud": {
+            "error": 0.379,
+            "n": 29
+          },
+          "otras": {
+            "error": 0.625,
+            "n": 96
+          }
+        },
+        "error_a_nivel_segmento": 0.486
+      },
+      "modelo_app": {
+        "accuracy": 0.481,
+        "macro_f1": 0.359,
+        "top3": 0.755,
+        "accuracy_segmento": 0.649,
+        "acuerdo_del_modelo_con_secop_mismos_items": 0.438,
+        "referencia_fuera_de_las_175_familias": 0.014,
+        "por_grupo": {
+          "8011": {
+            "accuracy": 0.434,
+            "top3": 0.735
+          },
+          "salud": {
+            "accuracy": 0.552,
+            "top3": 0.897
+          },
+          "otras": {
+            "accuracy": 0.5,
+            "top3": 0.729
+          }
+        }
+      },
+      "destino_de_los_8011_mal_declarados": {
+        "8012": 11,
+        "9314": 10,
+        "8110": 10,
+        "8111": 9,
+        "7811": 5,
+        "8010": 5,
+        "8510": 5,
+        "8610": 4
+      }
+    },
+    "HC_humano_y_consenso_coinciden": {
+      "n": 48,
+      "error_secop": {
+        "global": 0.625,
+        "por_grupo": {
+          "8011": {
+            "error": 0.947,
+            "n": 19
+          },
+          "salud": {
+            "error": 0.182,
+            "n": 11
+          },
+          "otras": {
+            "error": 0.556,
+            "n": 18
+          }
+        },
+        "error_a_nivel_segmento": 0.354
+      },
+      "modelo_app": {
+        "accuracy": 0.625,
+        "macro_f1": 0.449,
+        "top3": 0.854,
+        "accuracy_segmento": 0.708,
+        "acuerdo_del_modelo_con_secop_mismos_items": 0.438,
+        "referencia_fuera_de_las_175_familias": 0.042,
+        "por_grupo": {
+          "8011": {
+            "accuracy": 0.579,
+            "top3": 0.895
+          },
+          "salud": {
+            "accuracy": 0.818,
+            "top3": 1.0
+          },
+          "otras": {
+            "accuracy": 0.556,
+            "top3": 0.722
+          }
+        }
+      },
+      "destino_de_los_8011_mal_declarados": {
+        "8012": 5,
+        "8110": 3,
+        "9314": 2,
+        "8111": 1,
+        "8610": 1,
+        "8411": 1,
+        "7014": 1,
+        "7811": 1
+      }
+    }
+  },
+  "alertas_en_gold": {
+    "n": 9,
+    "H_humano": {
+      "n": 5,
+      "modelo_correcto": 0.6,
+      "secop_correcto": 0.0
+    },
+    "C_consenso_claude": {
+      "n": 9,
+      "modelo_correcto": 0.889,
+      "secop_correcto": 0.111
+    },
+    "HC_humano_y_consenso_coinciden": {
+      "n": 3,
+      "modelo_correcto": 1.0,
+      "secop_correcto": 0.0
+    }
+  },
+  "plausibilidad_token_f1": {
+    "modelo": 0.287,
+    "azar": 0.173,
+    "n": 212
+  }
+}

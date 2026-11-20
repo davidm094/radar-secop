@@ -5,6 +5,8 @@
 Proyecto final de Procesamiento de Lenguaje Natural, Pontificia Universidad Javeriana.
 Autores: David Moreno y Dierick Brochero.
 
+Documento del proyecto (PDF): [`documento_final.pdf`](documento_final.pdf).
+
 ## Problema y usuario
 
 Toda compra pública en Colombia se publica en SECOP II con un código del clasificador UNSPSC (estándar de la ONU adoptado por Colombia Compra Eficiente). Para una pyme, ese código es la puerta de entrada: si no sabe en qué familia cae lo que vende, no encuentra los procesos que le sirven. El catálogo tiene 420 familias y está escrito en lenguaje de catálogo, no en el de un empresario.
@@ -28,7 +30,7 @@ La familia 8011 (Servicios de recursos humanos) se usa como cajón de sastre par
 Esto cambia el diseño del proyecto:
 
 - Las métricas contra SECOP miden **acuerdo con SECOP, no exactitud**.
-- Para la evaluación real se anota a mano un **gold set** de 300 contratos con una guía basada en el Caso 10 (dos anotadores, kappa de Cohen).
+- Para la evaluación se arma un **gold set** de 300 contratos con una guía basada en el Caso 10: 215 con etiqueta humana y los 300 con dos anotaciones independientes de Claude. La confiabilidad de cada fuente se mide y se reporta (ver Resultados).
 - Las fórmulas de contratación se quitan del texto para que el modelo no aprenda el atajo hacia 8011.
 
 ## Pipeline
@@ -52,10 +54,12 @@ Esto cambia el diseño del proyecto:
  05 sesgo por entidad: split por entidad (entidades nunca vistas)
  06 discrepancias: código declarado ≠ predicción con confianza ≥ 0,70 → "para revisar"
  07 índice de procesos: texto + familia (inferida si viene sin código) + embeddings model2vec
- 08 gold set: kappa entre anotadores · error de SECOP por estrato · Claude vs. gold · modelos vs. gold
-          │  · plausibilidad de la explicación (palabras del modelo vs. palabras clave humanas)
- 09 variante con datos corregidos por Claude (solo si kappa Claude–gold ≥ 0,61)
+ 08 gold set (planillas de anotación): acuerdo entre anotadores, desacuerdos, plantilla de resolución
+ 09 variante con datos corregidos por Claude (solo si kappa Claude–gold ≥ 0,61; no se cumplió)
  10 evaluación de la búsqueda: consultas escritas por personas, juicios a ciegas, P@5 y nDCG@10
+ 11 revisión humana de 100 alertas de discrepancia
+ 13 evaluación final contra el gold set: confiabilidad de cada fuente · error de SECOP por estrato
+          │  · modelo vs. referencia humana y vs. consenso de Claude · plausibilidad de la explicación
           │
  app/ Streamlit: "Para pymes" · "Revisar un contrato" · "Cómo funciona"
 ```
@@ -72,9 +76,9 @@ Esto cambia el diseño del proyecto:
 | Contrafactual | sin "abogado jurídico", el modelo cae a 8011 con P = 0,16: sin el oficio, solo queda el cajón de sastre |
 | App | se marca **para revisar** (8011 declarado ≠ 8012 sugerido con confianza ≥ 0,70) |
 
-## Resultados actuales (contra etiquetas de SECOP)
+## Resultados actuales
 
-Familia (175 clases). El test natural tiene la distribución real (63 % de 8011); el balanceado tiene como máximo 300 por familia.
+Contra las etiquetas de SECOP (acuerdo, no exactitud). Familia (175 clases). El test natural tiene la distribución real (63 % de 8011); el balanceado tiene como máximo 300 por familia.
 
 | Variante | Test | Accuracy | Macro-F1 | Top-3 | ECE |
 |---|---|---|---|---|---|
@@ -94,7 +98,50 @@ Cómo leer la tabla:
 - **Explicabilidad (ERASER, 500 contratos de test):** quitar las 3 palabras que el modelo señala baja la probabilidad de la clase 0,29, frente a 0,09 si se quitan 3 al azar (comprehensiveness). Las palabras que el modelo señala sí son las que usa.
 - **Umbral de discrepancia:** con confianza ≥ 0,9 el modelo coincide con SECOP en el 95 % de los casos, pero cubre solo el 1,2 % de los contratos. Con ≥ 0,7, cubre el 14 % y coincide en el 68 %. Con el umbral de 0,70 se marcan 1.640 de 36.844 contratos de test (4,5 %), y el 80 % de ellos están declarados en 8011.
 
-La evaluación contra el gold set humano (paso 08) está pendiente de que termine la anotación.
+### Evaluación contra el gold set (paso 13)
+
+El gold set tiene 300 contratos fuera del entrenamiento. 215 tienen etiqueta humana (cuatro personas, sin traslape) y los 300 tienen dos anotaciones independientes de Claude (Sonnet 5.5 y Fable 5.2), hechas sin ver el código de SECOP. Todas las etiquetas están en `data/gold/gold_anotaciones.csv`.
+
+**Confiabilidad.** Las dos anotaciones de Claude coinciden entre sí en el 72,6 % de los contratos (kappa 0,72). Las etiquetas humanas coinciden con cada una de ellas en el 27 % (kappa 0,25–0,26) y con SECOP en el 14 %. En un control ciego de 60 contratos, 24 de los 47 desacuerdos son etiquetas humanas que no encajan con la guía (`reports/gold_control_ciego_revision.csv`; esa revisión la hizo Claude y hay que verificarla a mano). Por eso se reporta contra dos referencias: **H** (humana, 215) y **C** (consenso de las dos anotaciones de Claude, 208). Ninguna es una verdad de referencia limpia: H es ruidosa y C no es humana y excluye los casos ambiguos.
+
+| Medida | H: humana (215) | C: consenso de Claude (208) | H y C coinciden (48) |
+|---|---|---|---|
+| SECOP distinto de la referencia (familia) | 85,6 % | 73,1 % | 62,5 % |
+| … en contratos declarados en 8011 | 98,7 % | 97,6 % | 94,7 % |
+| Modelo B: accuracy | 0,228 | 0,481 | 0,625 |
+| Modelo B: top-3 | 0,405 | 0,755 | 0,854 |
+| Modelo B: macro-F1 | 0,110 | 0,359 | 0,449 |
+
+- Lo firme: casi todo lo declarado en 8011 en la muestra corresponde a otra familia, con cualquier referencia.
+- Lo abierto: la exactitud del modelo a nivel de familia está entre 0,23 y 0,48 según la referencia.
+- Plausibilidad de la explicación (F1 de palabras frente a las palabras clave humanas): 0,287 vs. 0,173 al azar.
+- Kappa Claude–humano = 0,25, por debajo de la compuerta de 0,61: el paso 09 (entrenar con datos corregidos por Claude) **no se corrió** y los textos estilo pyme de `data/llm/aumentado.jsonl` no se usaron.
+
+### BETO frente al modelo lineal (175 clases, mismo split)
+
+| Modelo | Test | Accuracy | Macro-F1 | Top-3 |
+|---|---|---|---|---|
+| TF-IDF + regresión logística (B) | balanceado | 0,559 | 0,407 | 0,759 |
+| BETO afinado (3 épocas, T4) | balanceado | 0,524 | 0,262 | 0,730 |
+| TF-IDF + regresión logística (B) | natural | 0,397 | 0,302 | 0,704 |
+| BETO afinado (3 épocas, T4) | natural | 0,459 | 0,221 | 0,794 |
+
+BETO no supera al modelo lineal en macro-F1 y mejora la accuracy y el top-3 solo en el test natural; con pocas épocas aprende sobre todo las clases grandes.
+
+### Búsqueda (30 consultas escritas por personas, juicios a ciegas)
+
+| Sistema | P@5 | P@10 | nDCG@10 |
+|---|---|---|---|
+| Familia | 0,293 | 0,303 | 0,307 |
+| Léxico (TF-IDF) | 0,520 | 0,557 | 0,610 |
+| Semántico (model2vec) | 0,560 | 0,553 | 0,588 |
+| Híbrido (el de la app) | 0,587 | 0,553 | 0,597 |
+
+El híbrido gana en P@5; en nDCG@10 el léxico queda ligeramente por encima, así que la diferencia entre los tres no es concluyente con 30 consultas.
+
+### Alertas de discrepancia (100 casos con confianza ≥ 0,70, un revisor)
+
+La familia sugerida por el modelo era la correcta en el 89 % de los casos (SECOP 5 %, ninguna 3 %, no clasificable 3 %). Es la precisión de la alerta en la zona de alta confianza, no en todos los contratos.
 
 ## Instalación
 
@@ -137,8 +184,8 @@ streamlit run app/app.py                    # demo en http://localhost:8501
 Con el gold set anotado y, opcionalmente, con Claude:
 
 ```bash
-python scripts/08_acuerdo_gold.py --desacuerdos                 # kappa + desacuerdos, sin abrir la clave
-python scripts/08_acuerdo_gold.py                               # evaluación completa contra el gold set
+python scripts/08_acuerdo_gold.py --desacuerdos                 # inconsistencias de anotación, sin abrir la clave
+python scripts/13_referencias_gold.py                           # evaluación final contra el gold (dos referencias)
 python scripts/11_revisar_discrepancias.py evaluar              # precisión de la alerta (revisión humana)
 python llm/reetiquetar.py --entrada data/gold/gold_set_plantilla.xlsx --salida data/llm/gold_claude.jsonl
 python scripts/09_entrenar_con_llm.py                           # solo corre si kappa Claude–gold ≥ 0,61
@@ -153,7 +200,8 @@ Los modelos y el índice no se suben al repositorio porque pesan más de 100 MB;
 ```
 src/radar/      config · data (descarga SODA y catálogo) · text (limpieza y lematización) · labels (niveles,
                 split, balanceo, exclusión del gold) · model · evaluate (métricas y ECE) · explain · search
-scripts/        00–11, un paso del pipeline cada uno (00 = datos congelados, 11 = revisión de discrepancias)
+scripts/        00–13, un paso del pipeline cada uno (00 = datos congelados, 11 = revisión de discrepancias,
+                12 = clave del gold set, 13 = evaluación final contra el gold con dos referencias)
 app/app.py      demo en Streamlit
 llm/            re-etiquetado y aumento con Claude Code (ver llm/README.md)
 notebooks/      beto_colab.ipynb: BETO afinado en Colab (GPU) con el mismo split que el modelo lineal
