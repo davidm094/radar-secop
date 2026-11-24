@@ -7,7 +7,7 @@ Autores: David Moreno y Dierick Brochero.
 
 | Entregable | Dónde está |
 |---|---|
-| Documento final (15 páginas, marco de Ashmore et al., 2021) | [`documento_final.pdf`](documento_final.pdf) |
+| Documento final (13 páginas, marco de Ashmore et al., 2021) | [`documento_final.pdf`](documento_final.pdf) |
 | Pipeline y código | `scripts/` (un paso por script) y `src/radar/` |
 | Demo | `streamlit run app/app.py` (ver "Cómo correrlo") |
 | Resultados | `reports/` |
@@ -67,6 +67,8 @@ Esto cambia el diseño del proyecto:
  13 evaluación final contra el gold set: confiabilidad de cada fuente · error de SECOP por estrato
           │  · modelo vs. referencia humana y vs. consenso de Claude · plausibilidad de la explicación
  14 prueba con textos estilo pyme generados por Claude (resultado negativo; no cambia el modelo)
+ 15 destilación: entrenar con las etiquetas de 8011 corregidas por Claude (mejora contra el gold; la app no cambia)
+ 16 control del umbral de alertas en un conjunto de validación aparte
           │
  app/ Streamlit: "Para pymes" · "Revisar un contrato" · "Alertas para veedurías" · "Cómo funciona"
 ```
@@ -122,8 +124,25 @@ El gold set tiene 300 contratos fuera del entrenamiento. 215 tienen etiqueta hum
 - Lo firme: casi todo lo declarado en 8011 en la muestra corresponde a otra familia, con cualquier referencia.
 - Lo abierto: la exactitud del modelo a nivel de familia está entre 0,23 y 0,48 según la referencia.
 - Plausibilidad de la explicación (F1 de palabras frente a las palabras clave humanas): 0,287 vs. 0,173 al azar.
-- Kappa Claude–humano = 0,25, por debajo de la compuerta de 0,61: el paso 09 (entrenar con datos corregidos por Claude) **no se corrió**.
+- Kappa Claude–humano = 0,25, por debajo de la compuerta de 0,61 que se había fijado para el paso 09. Como ese gold humano resultó poco confiable, la corrección de etiquetas se probó con otra regla, fijada antes de correr (ver "Entrenar con las etiquetas de 8011 corregidas").
 - Los textos estilo pyme de `data/llm/aumentado.jsonl` no dependen de esa compuerta y se probaron aparte (`scripts/14_prueba_textos_pyme.py` → `reports/prueba_textos_pyme.json`): el macro-F1 balanceado sube de 0,407 a 0,424, el gold queda igual (0,481 → 0,476 contra el consenso de Claude) y con las consultas de pyme la familia del proceso relevante queda en el top-3 en 56,8 % frente a 60,4 % sin ellos. Es un resultado negativo: el modelo de la app no cambió.
+
+### Entrenar con las etiquetas de 8011 corregidas (paso 15)
+
+Claude Sonnet 5.5 re-etiquetó, con la guía del gold set y sin ver el código declarado, los 3.000 contratos de entrenamiento declarados en 8011 (`data/llm/train_claude_8011.jsonl`): dejó 36 en 8011, marcó 148 como no clasificables y mandó el resto sobre todo a 8016, 8012 y 9314. Regla fijada antes de correr: el modelo nuevo (D) debe superar a B frente a la anotación ciega de Claude Fable sobre el gold (otro modelo y otra fecha que el maestro), sin perder más de 2 puntos de macro-F1 contra SECOP fuera de 8011.
+
+| Referencia | B (app) | D (8011 corregido) | Solo acierta D / solo B |
+|---|---|---|---|
+| Gold, Claude Fable (283): accuracy | 0,431 | 0,488 | 20 / 4 |
+| Gold, consenso de Claude (208): accuracy | 0,481 | 0,548 | 18 / 4 |
+| Gold, humana (215): accuracy | 0,228 | 0,270 | 11 / 2 |
+| SECOP sin 8011, test balanceado: macro-F1 | 0,411 | 0,417 | – |
+
+D cumple la regla y mejora contra las tres referencias, incluida la humana (prueba de signos: p = 0,002, 0,004 y 0,02). Salvedades: el maestro y dos de los árbitros son modelos de Claude, y D casi nunca predice 8011, así que su acuerdo con SECOP en el test natural baja de 0,397 a 0,216 y sus alertas suben de 1.640 a 3.004. **La app sigue usando B**, porque la revisión de alertas y la evaluación de la búsqueda se hicieron con B. Detalle en `reports/destilacion_8011.json`.
+
+### Umbral de alertas en validación (paso 16)
+
+El umbral de 0,70 se eligió mirando el test. Al repetir la cuenta apartando el 10 % del entrenamiento como validación (14.737 contratos), la tasa de alertas es 4,7 % y el acuerdo con SECOP de las predicciones confiadas 67,3 %; en el test son 4,5 % y 68,3 %. El umbral no está sobreajustado al test (`reports/validacion_umbral.json`).
 
 ### BETO frente al modelo lineal (175 clases, mismo split)
 
@@ -202,6 +221,8 @@ Con el gold set anotado y, opcionalmente, con Claude:
 python scripts/08_acuerdo_gold.py --desacuerdos                 # inconsistencias de anotación, sin abrir la clave
 python scripts/13_referencias_gold.py                           # evaluación final contra el gold (dos referencias)
 python scripts/14_prueba_textos_pyme.py                         # prueba: entrenar con los textos estilo pyme (no cambia el modelo de la app)
+python scripts/15_destilacion_8011.py                           # entrenar con las etiquetas de 8011 corregidas por Claude
+python scripts/16_validacion_umbral.py                          # control del umbral de alertas en validación
 python scripts/11_revisar_discrepancias.py evaluar              # precisión de la alerta (revisión humana)
 python llm/reetiquetar.py --entrada data/gold/gold_set_plantilla.xlsx --salida data/llm/gold_claude.jsonl
 python scripts/09_entrenar_con_llm.py                           # solo corre si kappa Claude–gold ≥ 0,61
@@ -218,9 +239,9 @@ Los modelos y el índice no se suben al repositorio porque pesan más de 100 MB;
 ```
 src/radar/      config · data (descarga SODA y catálogo) · text (limpieza y lematización) · labels (niveles,
                 split, balanceo, exclusión del gold) · model · evaluate (métricas y ECE) · explain · search
-scripts/        00–14, un paso del pipeline cada uno (00 = datos congelados, 11 = revisión de discrepancias,
+scripts/        00–16, un paso del pipeline cada uno (00 = datos congelados, 11 = revisión de discrepancias,
                 12 = clave del gold set, 13 = evaluación final contra el gold con dos referencias,
-                14 = prueba con textos estilo pyme)
+                14 = prueba con textos estilo pyme, 15 = destilación de 8011, 16 = validación del umbral)
 app/app.py      demo en Streamlit
 llm/            re-etiquetado y aumento con Claude Code (ver llm/README.md)
 notebooks/      beto_colab.ipynb: BETO afinado en Colab (GPU) con el mismo split que el modelo lineal
@@ -237,14 +258,15 @@ tests/          pruebas básicas (test_basico.py) y simulador de Claude para pro
 Claude **nunca** predice en la app. Se usó para tres cosas, todas declaradas:
 
 1. anotar dos veces los 300 contratos del gold set con la misma guía que los anotadores humanos y sin ver el código declarado (Sonnet 5.5 y Fable 5.2). Esas anotaciones son la segunda referencia de la evaluación, reportada siempre aparte de la humana;
-2. re-etiquetar contratos de entrenamiento: **no se hizo**, porque no se cumplió la compuerta (kappa Claude–humano 0,25 < 0,61);
+2. re-etiquetar los 3.000 contratos de entrenamiento declarados en 8011 (paso 15). Mejora el modelo contra el gold set, pero la app sigue con el modelo original;
 3. generar 7.001 descripciones de negocio estilo pyme: se probaron (paso 14) y no mejoraron la búsqueda, así que el modelo de la app no las usa.
 
 Detalle, comandos y controles en [`llm/README.md`](llm/README.md).
 
 ## Limitaciones conocidas
 
-- Las etiquetas de entrenamiento son las de SECOP, con el sesgo descrito.
+- Las etiquetas de entrenamiento del modelo de la app son las de SECOP, con el sesgo descrito.
+- Se usan 300.000 contratos de 1,9 millones, los primeros que entrega la API y no una muestra aleatoria; 315 de las 358 familias tienen menos de 300 contratos.
 - El gold set es pequeño (300) y su parte humana resultó poco confiable (kappa 0,20 entre los dos anotadores humanos); la referencia alternativa no es humana. Por eso la exactitud del modelo se reporta como un rango.
 - Las 30 consultas de búsqueda y la revisión de 100 alertas las hizo una sola persona.
 - El lematizador de spaCy comete errores en algunas palabras ("área" → "areo"); se usa el modelo `es_core_news_sm` 3.7 con spaCy 3.8.

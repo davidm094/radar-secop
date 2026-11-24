@@ -1,8 +1,10 @@
 # Uso de Claude en Radar SECOP
 
 > **Estado final (24-nov-2026).** Se corrió el re-etiquetado de los 300 contratos del gold set (dos veces, con Sonnet 5.5
-> y Fable 5.2) y el aumento estilo pyme (7.001 textos). El re-etiquetado a escala **no** se corrió: el kappa de Claude
-> contra el gold humano fue 0,25, por debajo de la compuerta de 0,61. Las dos anotaciones de Claude del gold set terminaron
+> y Fable 5.2) y el aumento estilo pyme (7.001 textos). El kappa de Claude contra el gold humano fue 0,25, por debajo de
+> la compuerta de 0,61; como ese gold resultó poco confiable, el 24-nov se re-etiquetaron los 3.000 contratos de
+> entrenamiento declarados en 8011 (`data/llm/train_claude_8011.jsonl`, mismo prompt `0ddf2ffaf825`) y se evaluó con
+> otra regla, fijada antes de correr (`scripts/15_destilacion_8011.py`). Las dos anotaciones de Claude del gold set terminaron
 > usándose como segunda referencia de la evaluación, declarada como tal (`scripts/13_referencias_gold.py`). Los textos
 > estilo pyme se probaron en `scripts/14_prueba_textos_pyme.py` y no cambiaron el modelo de la app. Lo que sigue es el
 > procedimiento tal como se diseñó.

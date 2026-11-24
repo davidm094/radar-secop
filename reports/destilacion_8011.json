@@ -1,0 +1,268 @@
+{
+  "reetiquetados": 3000,
+  "no_clasificable": 148,
+  "fuera_de_las_175_familias": 11,
+  "se_quedan_en_8011": 36,
+  "confianza": {
+    "media": 1463,
+    "alta": 949,
+    "baja": 588
+  },
+  "destino_top10": {
+    "8016": 495,
+    "8012": 357,
+    "9314": 295,
+    "8610": 228,
+    "8010": 210,
+    "8110": 114,
+    "8111": 110,
+    "8511": 104,
+    "8411": 102,
+    "7710": 101
+  },
+  "variantes": {
+    "B": {
+      "n_entrenamiento": 52555,
+      "n_8011_en_entrenamiento": 3000,
+      "test_natural": {
+        "accuracy": 0.397,
+        "macro_f1": 0.302,
+        "macro_f1_sin_8011": 0.393,
+        "accuracy_sin_8011": 0.574,
+        "predice_8011": 0.19
+      },
+      "alertas_test": {
+        "n": 1640,
+        "tasa": 0.045,
+        "desde_8011": 0.798
+      },
+      "test_balanceado": {
+        "accuracy": 0.559,
+        "macro_f1": 0.407,
+        "macro_f1_sin_8011": 0.411,
+        "accuracy_sin_8011": 0.569,
+        "predice_8011": 0.017
+      },
+      "gold": {
+        "claude_fable": {
+          "n": 283,
+          "accuracy": 0.431,
+          "top3": 0.717,
+          "segmento": 0.587
+        },
+        "claude_sonnet": {
+          "n": 290,
+          "accuracy": 0.386,
+          "top3": 0.652,
+          "segmento": 0.572
+        },
+        "C_consenso_claude": {
+          "n": 208,
+          "accuracy": 0.481,
+          "top3": 0.755,
+          "segmento": 0.649
+        },
+        "H_humano": {
+          "n": 215,
+          "accuracy": 0.228,
+          "top3": 0.405,
+          "segmento": 0.372
+        },
+        "HC_humano_y_consenso": {
+          "n": 48,
+          "accuracy": 0.625,
+          "top3": 0.854,
+          "segmento": 0.708
+        },
+        "humano2": {
+          "n": 53,
+          "accuracy": 0.34,
+          "top3": 0.642,
+          "segmento": 0.472
+        },
+        "secop": {
+          "n": 300,
+          "accuracy": 0.433,
+          "top3": 0.657,
+          "segmento": 0.59
+        }
+      }
+    },
+    "D": {
+      "n_entrenamiento": 52396,
+      "n_8011_en_entrenamiento": 36,
+      "test_natural": {
+        "accuracy": 0.216,
+        "macro_f1": 0.292,
+        "macro_f1_sin_8011": 0.398,
+        "accuracy_sin_8011": 0.575,
+        "predice_8011": 0.003
+      },
+      "alertas_test": {
+        "n": 3004,
+        "tasa": 0.082,
+        "desde_8011": 0.874
+      },
+      "test_balanceado": {
+        "accuracy": 0.554,
+        "macro_f1": 0.411,
+        "macro_f1_sin_8011": 0.417,
+        "accuracy_sin_8011": 0.571,
+        "predice_8011": 0.0
+      },
+      "gold": {
+        "claude_fable": {
+          "n": 283,
+          "accuracy": 0.488,
+          "top3": 0.788,
+          "segmento": 0.633
+        },
+        "claude_sonnet": {
+          "n": 290,
+          "accuracy": 0.445,
+          "top3": 0.721,
+          "segmento": 0.617
+        },
+        "C_consenso_claude": {
+          "n": 208,
+          "accuracy": 0.548,
+          "top3": 0.827,
+          "segmento": 0.707
+        },
+        "H_humano": {
+          "n": 215,
+          "accuracy": 0.27,
+          "top3": 0.428,
+          "segmento": 0.409
+        },
+        "HC_humano_y_consenso": {
+          "n": 48,
+          "accuracy": 0.708,
+          "top3": 0.875,
+          "segmento": 0.771
+        },
+        "humano2": {
+          "n": 53,
+          "accuracy": 0.34,
+          "top3": 0.642,
+          "segmento": 0.453
+        },
+        "secop": {
+          "n": 300,
+          "accuracy": 0.29,
+          "top3": 0.38,
+          "segmento": 0.49
+        }
+      }
+    },
+    "D2": {
+      "n_entrenamiento": 51853,
+      "n_8011_en_entrenamiento": 14,
+      "test_natural": {
+        "accuracy": 0.213,
+        "macro_f1": 0.29,
+        "macro_f1_sin_8011": 0.394,
+        "accuracy_sin_8011": 0.575,
+        "predice_8011": 0.0
+      },
+      "alertas_test": {
+        "n": 2985,
+        "tasa": 0.081,
+        "desde_8011": 0.875
+      },
+      "test_balanceado": {
+        "accuracy": 0.554,
+        "macro_f1": 0.407,
+        "macro_f1_sin_8011": 0.413,
+        "accuracy_sin_8011": 0.571,
+        "predice_8011": 0.0
+      },
+      "gold": {
+        "claude_fable": {
+          "n": 283,
+          "accuracy": 0.498,
+          "top3": 0.777,
+          "segmento": 0.643
+        },
+        "claude_sonnet": {
+          "n": 290,
+          "accuracy": 0.452,
+          "top3": 0.717,
+          "segmento": 0.621
+        },
+        "C_consenso_claude": {
+          "n": 208,
+          "accuracy": 0.558,
+          "top3": 0.822,
+          "segmento": 0.716
+        },
+        "H_humano": {
+          "n": 215,
+          "accuracy": 0.265,
+          "top3": 0.423,
+          "segmento": 0.414
+        },
+        "HC_humano_y_consenso": {
+          "n": 48,
+          "accuracy": 0.729,
+          "top3": 0.875,
+          "segmento": 0.792
+        },
+        "humano2": {
+          "n": 53,
+          "accuracy": 0.34,
+          "top3": 0.623,
+          "segmento": 0.472
+        },
+        "secop": {
+          "n": 300,
+          "accuracy": 0.293,
+          "top3": 0.377,
+          "segmento": 0.51
+        }
+      }
+    }
+  },
+  "pareado_B_vs_D": {
+    "claude_fable": {
+      "solo_acierta_D": 20,
+      "solo_acierta_B": 4,
+      "p_signos": 0.0015
+    },
+    "claude_sonnet": {
+      "solo_acierta_D": 22,
+      "solo_acierta_B": 5,
+      "p_signos": 0.0015
+    },
+    "C_consenso_claude": {
+      "solo_acierta_D": 18,
+      "solo_acierta_B": 4,
+      "p_signos": 0.0043
+    },
+    "H_humano": {
+      "solo_acierta_D": 11,
+      "solo_acierta_B": 2,
+      "p_signos": 0.0225
+    },
+    "HC_humano_y_consenso": {
+      "solo_acierta_D": 5,
+      "solo_acierta_B": 1,
+      "p_signos": 0.2188
+    },
+    "humano2": {
+      "solo_acierta_D": 1,
+      "solo_acierta_B": 1,
+      "p_signos": 1.0
+    },
+    "secop": {
+      "solo_acierta_D": 3,
+      "solo_acierta_B": 46,
+      "p_signos": 0.0
+    }
+  },
+  "regla": {
+    "1_supera_a_B_contra_claude_fable": true,
+    "2_no_pierde_mas_de_2_puntos_sin_8011": true,
+    "cumple": true
+  }
+}
