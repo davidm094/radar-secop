@@ -92,6 +92,8 @@ with tab_pyme:
             r = B.buscar(q, qp, probs, k=10)
             r["familia"] = r.fam.map(nombre) + np.where(r.familia_inferida, " (inferida)", "")
             r["precio_base"] = r.precio_base.map(lambda x: f"${x:,.0f}" if pd.notna(x) else "")
+            # la API entrega el enlace como {"url": "..."}; se deja solo la dirección para que sea clicable
+            r["urlproceso"] = r.urlproceso.map(lambda u: u.get("url", "") if isinstance(u, dict) else (u or ""))
             st.dataframe(r[["texto", "entidad", "departamento_entidad", "precio_base", "familia",
                             "estado_del_procedimiento", "score", "urlproceso"]],
                          hide_index=True, width="stretch",
@@ -139,6 +141,8 @@ with tab_info:
         st.info("Corra scripts/03_entrenar_evaluar.py")
     st.markdown(
         "- Las etiquetas de SECOP tienen sesgo: la familia 8011 (recursos humanos) se usa como cajón de sastre. "
-        "Por eso estas métricas miden **acuerdo con SECOP**, no exactitud; la evaluación final es contra un "
-        "gold set anotado a mano.\n"
+        "Por eso estas métricas miden **acuerdo con SECOP**, no exactitud.\n"
+        "- Contra un gold set de 300 contratos, casi todos los declarados en 8011 corresponden a otra familia "
+        "(95 % a 99 % según la referencia). La exactitud del modelo queda entre 0,23 (etiquetas humanas, poco "
+        "confiables) y 0,48 (consenso de dos anotaciones de Claude); el detalle está en `documento_final.pdf`.\n"
         "- Datos: SECOP II (datos.gov.co, CC BY-SA 4.0). Catálogo: UNSPSC v14 en español, Colombia Compra Eficiente.")

@@ -47,7 +47,7 @@ def rankings(k: int = 10) -> pd.DataFrame:
             for pos, x in enumerate(res.itertuples(), 1):
                 filas.append({"consulta_id": r.id, "consulta": r.consulta, "sistema": sis, "posicion": pos,
                               "id_del_proceso": x.id_del_proceso, "texto": x.texto, "entidad": x.entidad,
-                              "url": x.urlproceso})
+                              "url": x.urlproceso.get("url", "") if isinstance(x.urlproceso, dict) else x.urlproceso})
     return pd.DataFrame(filas)
 
 
