@@ -1,7 +1,8 @@
 """Radar SECOP – demo en Streamlit.
 
 Ejecutar desde la raíz del repo:  streamlit run app/app.py
-Requiere el modelo (scripts/03) y el índice de procesos (scripts/07); con datos congelados, antes scripts/00.
+Requiere el modelo (scripts/15) y el índice de procesos (scripts/07); con datos congelados, antes scripts/00.
+Lo más fácil: python scripts/preparar_demo.py
 """
 import json
 import sys
@@ -14,7 +15,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from radar.config import DATA_PROC, REPORTS, UMBRAL_DISCREPANCIA
+from radar.config import DATA_PROC, REPORTS, MODELO_APP
 from radar.data import familias_unspsc, segmentos_unspsc
 from radar.explain import local, Vecinos
 from radar.model import cargar
@@ -28,7 +29,7 @@ UMBRAL_DUDA = 0.35  # por debajo, la familia es dudosa y se muestra también el 
 
 @st.cache_resource(show_spinner="Cargando modelo y catálogo…")
 def recursos():
-    modelo = cargar("familia_v1")
+    modelo = cargar(MODELO_APP)
     nombres = familias_unspsc()
     c = pd.read_parquet(DATA_PROC / "contratos_prep.parquet",
                         columns=["id_contrato", "objeto_del_contrato", "nombre_entidad", "fam", "txt_lem"])
@@ -243,8 +244,10 @@ with tab_alertas:
         A = None
         st.info("Corra scripts/06_discrepancias.py")
     if A is not None:
-        st.caption(f"{len(A):,} alertas sobre 36.844 contratos que el modelo no vio al entrenar (4,5 %). ".replace(",", ".")
-                   + "En una revisión manual de 100 de ellas, elegidas al azar, la familia sugerida era la correcta en 89.")
+        tasa = f"{len(A) / 36844 * 100:.1f}".replace(".", ",")
+        st.caption(f"{len(A):,}".replace(",", ".") + f" alertas sobre 36.844 contratos que el modelo no vio al entrenar ({tasa} %). "
+                   + "Una persona revisó 100 alertas del modelo anterior: 94 siguen aquí con la misma familia sugerida, y en 83 "
+                   "de esas 94 la sugerencia era la correcta. Cerca de la mitad de las alertas son nuevas y nadie las ha revisado.")
         a1, a2, a3 = st.columns([2, 2, 1])
         por_entidad = A.nombre_entidad.value_counts()
         ent = a1.selectbox("Entidad", ["Todas"] + [f"{e} ({n})" for e, n in por_entidad.items()])
@@ -287,15 +290,30 @@ with tab_alertas:
 
 # ---------------------------------------------------------------- Info
 with tab_info:
-    st.subheader("Métricas del modelo (acuerdo con el código declarado en SECOP)")
+    st.subheader("Qué modelo usa la app y qué tan bien clasifica")
     try:
-        st.dataframe(pd.read_csv(REPORTS / "metricas_familia.csv").round(3), hide_index=True)
+        dz = json.loads((REPORTS / "destilacion_8011.json").read_text(encoding="utf-8"))["variantes"]
+        filas = []
+        for k, etiqueta in (("D", "Modelo de la app (8011 corregido por Claude)"), ("B", "Mismo modelo con las etiquetas de SECOP")):
+            v = dz[k]
+            filas.append({"modelo": etiqueta,
+                          "exactitud vs. consenso de Claude (gold)": v["gold"]["C_consenso_claude"]["accuracy"],
+                          "top-3 vs. consenso de Claude (gold)": v["gold"]["C_consenso_claude"]["top3"],
+                          "exactitud vs. etiqueta humana (gold)": v["gold"]["H_humano"]["accuracy"],
+                          "acuerdo con SECOP (test balanceado)": v["test_balanceado"]["accuracy"],
+                          "predice 8011 (test real)": v["test_natural"]["predice_8011"]})
+        st.dataframe(pd.DataFrame(filas), hide_index=True)
     except FileNotFoundError:
-        st.info("Corra scripts/03_entrenar_evaluar.py")
+        st.info("Corra scripts/15_destilacion_8011.py")
     st.markdown(
+        "- El modelo es lineal (TF-IDF y regresión logística) y clasifica entre 175 familias. Claude **no** predice "
+        "en la app.\n"
         "- Las etiquetas de SECOP tienen sesgo: la familia 8011 (recursos humanos) se usa como cajón de sastre. "
-        "Por eso estas métricas miden **acuerdo con SECOP**, no exactitud.\n"
-        "- Contra un gold set de 300 contratos, casi todos los declarados en 8011 corresponden a otra familia "
-        "(95 % a 99 % según la referencia). La exactitud del modelo queda entre 0,23 (etiquetas humanas, poco "
-        "confiables) y 0,48 (consenso de dos anotaciones de Claude); el detalle está en `documento_final.pdf`.\n"
+        "Contra un gold set de 300 contratos, casi todos los declarados en 8011 corresponden a otra familia "
+        "(95 % a 99 % según la referencia).\n"
+        "- Por eso, en el entrenamiento, los 3.000 contratos declarados en 8011 los re-etiquetó Claude Sonnet 5.5 "
+        "sin ver el código declarado. El resto conserva la etiqueta de SECOP. El modelo resultante casi nunca "
+        "sugiere 8011.\n"
+        "- La exactitud queda entre 0,27 (etiquetas humanas, poco confiables) y 0,55 (consenso de dos anotaciones "
+        "de Claude, que no es un árbitro independiente). El detalle está en `documento_final.pdf`.\n"
         "- Datos: SECOP II (datos.gov.co, CC BY-SA 4.0). Catálogo: UNSPSC v14 en español, Colombia Compra Eficiente.")

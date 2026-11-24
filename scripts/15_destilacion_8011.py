@@ -6,16 +6,17 @@ en 8011 (data/llm/train_claude_8011.jsonl). El resto del entrenamiento conserva 
 el gold set nunca llevan etiquetas de Claude como entrada.
 
 Variantes (mismo modelo y misma partición que scripts/03):
-  B   modelo de la app: etiquetas de SECOP.
+  B   etiquetas de SECOP tal como vienen (models/familia_v1, scripts/03).
   D   las etiquetas de 8011 se reemplazan por las de Claude; se descartan los "no clasificable" y las
-      familias fuera de las 175 del modelo.
+      familias fuera de las 175 del modelo. Es el modelo de la app: se guarda como models/familia_v2.
   D2  como D, pero solo con las etiquetas de confianza alta o media (análisis secundario).
 
 Regla fijada antes de ver el resultado (24-nov-2026): D se considera mejora si
   1. supera a B en acuerdo con la anotación ciega de Claude Fable 5.2 sobre el gold set (otro modelo, otra fecha), y
   2. no pierde más de 2 puntos de macro-F1 contra SECOP en las familias distintas de 8011 (test balanceado).
 Salvedad: el árbitro del punto 1 es otro modelo de Claude, así que la evaluación no es independiente del maestro.
-Salida: reports/destilacion_8011.json. No cambia el modelo de la app.
+Como la regla se cumplió, la app pasó a usar D (24-nov-2026). Claude no predice en la app: solo corrigió
+etiquetas de entrenamiento. Salida: reports/destilacion_8011.json y models/familia_v2.joblib.
 """
 import json
 import sys
@@ -26,9 +27,9 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import f1_score
 
-from radar.config import DATA_PROC, REPORTS, ROOT
+from radar.config import DATA_PROC, REPORTS, ROOT, MODELO_APP
 from radar.labels import particion_por_texto, clases_validas, balancear, excluir_gold
-from radar.model import construir
+from radar.model import construir, guardar
 from radar.text import preparar
 
 UMBRAL = 0.70
@@ -74,9 +75,10 @@ out = {"reetiquetados": int(len(c)), "no_clasificable": int(c.no_clasificable.su
        "se_quedan_en_8011": int((util.familia == "8011").sum()),
        "confianza": c.confianza.value_counts().to_dict(),
        "destino_top10": util.familia.value_counts().head(10).to_dict(), "variantes": {}}
-pred_gold = {}
+pred_gold, modelos = {}, {}
 for nombre, d in variantes.items():
     m = construir().fit(d.txt_lem, d.fam)
+    modelos[nombre] = m
     r = {"n_entrenamiento": int(len(d)), "n_8011_en_entrenamiento": int((d.fam == "8011").sum())}
     for conj, t in [("test_natural", te), ("test_balanceado", te_bal)]:
         P = m.predict_proba(t.txt_lem.tolist())
@@ -85,6 +87,7 @@ for nombre, d in variantes.items():
         no = y != "8011"
         r[conj] = {"accuracy": round(float((p == y).mean()), 3),
                    "macro_f1": round(float(f1_score(y, p, average="macro", zero_division=0)), 3),
+                   "top3": round(float(np.mean([a in b for a, b in zip(y, m.classes_[np.argsort(-P, 1)[:, :3]])])), 3),
                    "macro_f1_sin_8011": round(float(f1_score(y[no], p[no], average="macro", zero_division=0,
                                                               labels=sorted(set(y[no])))), 3),
                    "accuracy_sin_8011": round(float((p[no] == y[no]).mean()), 3),
@@ -121,5 +124,22 @@ out["regla"] = {"1_supera_a_B_contra_claude_fable": d["gold"]["claude_fable"]["a
                 "2_no_pierde_mas_de_2_puntos_sin_8011": d["test_balanceado"]["macro_f1_sin_8011"] >= b["test_balanceado"]["macro_f1_sin_8011"] - 0.02}
 out["regla"]["cumple"] = all(out["regla"].values())
 print(out["regla"])
+
+# Oficios con familia propia según el Caso 10: ¿a qué familia los manda cada modelo? (test, texto original)
+oficios = {"abogad": "8012", "contador": "8411", "ingenier": "8110", "medic": "8512",
+           "enfermer": "8510", "docente": "8610", "conductor": "7811"}
+out["oficios"] = []
+for kw, fam10 in oficios.items():
+    s = te[te.txt_norm.str.contains(kw)]
+    if len(s) < 20:
+        continue
+    f = {"oficio": kw, "n_test": int(len(s)), "familia_caso10": fam10, "SECOP_en_8011": round(float((s.fam == "8011").mean()), 3),
+         "SECOP_en_caso10": round(float((s.fam == fam10).mean()), 3)}
+    for n in ("B", "D"):
+        p = modelos[n].predict(s.txt_lem.tolist())
+        f[f"{n}_pred_8011"], f[f"{n}_pred_caso10"] = round(float((p == "8011").mean()), 3), round(float((p == fam10).mean()), 3)
+    out["oficios"].append(f)
+print(pd.DataFrame(out["oficios"]).to_string(index=False))
 if len(sys.argv) <= 1:
     (REPORTS / "destilacion_8011.json").write_text(json.dumps(out, indent=2, ensure_ascii=False))
+    guardar(modelos["D"], MODELO_APP)

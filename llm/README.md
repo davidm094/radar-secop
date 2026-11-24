@@ -6,7 +6,8 @@
 > entrenamiento declarados en 8011 (`data/llm/train_claude_8011.jsonl`, mismo prompt `0ddf2ffaf825`) y se evaluó con
 > otra regla, fijada antes de correr (`scripts/15_destilacion_8011.py`). Las dos anotaciones de Claude del gold set terminaron
 > usándose como segunda referencia de la evaluación, declarada como tal (`scripts/13_referencias_gold.py`). Los textos
-> estilo pyme se probaron en `scripts/14_prueba_textos_pyme.py` y no cambiaron el modelo de la app. Lo que sigue es el
+> estilo pyme se probaron en `scripts/14_prueba_textos_pyme.py` y no se usan. Como la regla del paso 15 se cumplió, **el modelo de la app
+> se entrena con las etiquetas de 8011 corregidas por Claude** (`models/familia_v2`); Claude sigue sin predecir en la app. Lo que sigue es el
 > procedimiento tal como se diseñó.
 
 Claude (Anthropic) nunca corre dentro de la app. Se diseñó para preparar datos de entrenamiento y para medir su acuerdo con el gold set.

@@ -27,6 +27,7 @@
       "test_natural": {
         "accuracy": 0.397,
         "macro_f1": 0.302,
+        "top3": 0.704,
         "macro_f1_sin_8011": 0.393,
         "accuracy_sin_8011": 0.574,
         "predice_8011": 0.19
@@ -39,6 +40,7 @@
       "test_balanceado": {
         "accuracy": 0.559,
         "macro_f1": 0.407,
+        "top3": 0.759,
         "macro_f1_sin_8011": 0.411,
         "accuracy_sin_8011": 0.569,
         "predice_8011": 0.017
@@ -94,6 +96,7 @@
       "test_natural": {
         "accuracy": 0.216,
         "macro_f1": 0.292,
+        "top3": 0.295,
         "macro_f1_sin_8011": 0.398,
         "accuracy_sin_8011": 0.575,
         "predice_8011": 0.003
@@ -106,6 +109,7 @@
       "test_balanceado": {
         "accuracy": 0.554,
         "macro_f1": 0.411,
+        "top3": 0.745,
         "macro_f1_sin_8011": 0.417,
         "accuracy_sin_8011": 0.571,
         "predice_8011": 0.0
@@ -161,6 +165,7 @@
       "test_natural": {
         "accuracy": 0.213,
         "macro_f1": 0.29,
+        "top3": 0.291,
         "macro_f1_sin_8011": 0.394,
         "accuracy_sin_8011": 0.575,
         "predice_8011": 0.0
@@ -173,6 +178,7 @@
       "test_balanceado": {
         "accuracy": 0.554,
         "macro_f1": 0.407,
+        "top3": 0.745,
         "macro_f1_sin_8011": 0.413,
         "accuracy_sin_8011": 0.571,
         "predice_8011": 0.0
@@ -264,5 +270,84 @@
     "1_supera_a_B_contra_claude_fable": true,
     "2_no_pierde_mas_de_2_puntos_sin_8011": true,
     "cumple": true
-  }
+  },
+  "oficios": [
+    {
+      "oficio": "abogad",
+      "n_test": 1007,
+      "familia_caso10": "8012",
+      "SECOP_en_8011": 0.833,
+      "SECOP_en_caso10": 0.089,
+      "B_pred_8011": 0.271,
+      "B_pred_caso10": 0.588,
+      "D_pred_8011": 0.0,
+      "D_pred_caso10": 0.798
+    },
+    {
+      "oficio": "contador",
+      "n_test": 230,
+      "familia_caso10": "8411",
+      "SECOP_en_8011": 0.722,
+      "SECOP_en_caso10": 0.178,
+      "B_pred_8011": 0.1,
+      "B_pred_caso10": 0.761,
+      "D_pred_8011": 0.0,
+      "D_pred_caso10": 0.822
+    },
+    {
+      "oficio": "ingenier",
+      "n_test": 834,
+      "familia_caso10": "8110",
+      "SECOP_en_8011": 0.781,
+      "SECOP_en_caso10": 0.05,
+      "B_pred_8011": 0.231,
+      "B_pred_caso10": 0.287,
+      "D_pred_8011": 0.0,
+      "D_pred_caso10": 0.362
+    },
+    {
+      "oficio": "medic",
+      "n_test": 1007,
+      "familia_caso10": "8512",
+      "SECOP_en_8011": 0.357,
+      "SECOP_en_caso10": 0.179,
+      "B_pred_8011": 0.047,
+      "B_pred_caso10": 0.34,
+      "D_pred_8011": 0.001,
+      "D_pred_caso10": 0.354
+    },
+    {
+      "oficio": "enfermer",
+      "n_test": 823,
+      "familia_caso10": "8510",
+      "SECOP_en_8011": 0.379,
+      "SECOP_en_caso10": 0.513,
+      "B_pred_8011": 0.024,
+      "B_pred_caso10": 0.775,
+      "D_pred_8011": 0.001,
+      "D_pred_caso10": 0.781
+    },
+    {
+      "oficio": "docente",
+      "n_test": 120,
+      "familia_caso10": "8610",
+      "SECOP_en_8011": 0.567,
+      "SECOP_en_caso10": 0.042,
+      "B_pred_8011": 0.208,
+      "B_pred_caso10": 0.05,
+      "D_pred_8011": 0.0,
+      "D_pred_caso10": 0.083
+    },
+    {
+      "oficio": "conductor",
+      "n_test": 130,
+      "familia_caso10": "7811",
+      "SECOP_en_8011": 0.723,
+      "SECOP_en_caso10": 0.092,
+      "B_pred_8011": 0.154,
+      "B_pred_caso10": 0.254,
+      "D_pred_8011": 0.0,
+      "D_pred_caso10": 0.423
+    }
+  ]
 }

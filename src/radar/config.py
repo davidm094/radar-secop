@@ -21,8 +21,11 @@ UNSPSC_XLS_URL = (
 SEED = 42
 MIN_EJEMPLOS_CLASE = 30      # familias con menos ejemplos se descartan
 MAX_EJEMPLOS_CLASE = 3000    # tope por familia en entrenamiento (balanceo)
+# Modelos guardados en models/
+MODELO_SECOP = "familia_v1"  # entrenado con las etiquetas de SECOP tal como vienen (scripts/03)
+MODELO_APP = "familia_v2"    # el de la app: igual, pero las etiquetas de 8011 del entrenamiento las corrigió Claude (scripts/15)
 TOP_K = 3                    # sugerencias que ve la pyme
-UMBRAL_DISCREPANCIA = 0.90   # confianza mínima para marcar una discrepancia
+UMBRAL_DISCREPANCIA = 0.70   # confianza mínima para marcar una discrepancia (scripts/06 y la app)
 
 for p in (DATA_RAW, DATA_PROC, MODELS, REPORTS / "figs"):
     p.mkdir(parents=True, exist_ok=True)

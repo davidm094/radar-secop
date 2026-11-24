@@ -7,5 +7,24 @@
     "ninguna": 0.03
   },
   "precision_alerta": 0.89,
-  "nota": "precision_alerta = fracción en que la familia sugerida por el modelo era la correcta"
+  "nota": "precision_alerta = fracción en que la familia sugerida por el modelo era la correcta",
+  "modelo_revisado": "familia_v1 (etiquetas de SECOP)",
+  "traslado_al_modelo_de_la_app": {
+    "alertas_del_modelo_de_la_app": 3004,
+    "ya_eran_alerta_del_modelo_revisado": 1567,
+    "alertas_nuevas_sin_revision_humana": 1437,
+    "revisadas_que_siguen_como_alerta": 94,
+    "revisadas_que_siguen_con_la_misma_familia": 94,
+    "veredicto_de_esas": {
+      "modelo": 83,
+      "secop": 5,
+      "no_clasificable": 3,
+      "ninguna": 3
+    },
+    "precision_en_esas": 0.883,
+    "veredicto_de_las_que_ya_no_son_alerta": {
+      "modelo": 6
+    },
+    "nota": "la revisión humana solo cubre las alertas que el modelo de la app comparte con el modelo revisado"
+  }
 }

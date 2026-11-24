@@ -12,6 +12,14 @@ Paso 1 – armar el pool a juzgar:
 Paso 2 – después de marcar 'relevante' (1 = le sirve a esa pyme, 0 = no):
     python scripts/10_evaluar_busqueda.py evaluar
   calcula precisión@5, precisión@10 y nDCG@10 por sistema → reports/metricas_busqueda.csv
+
+Los juicios se hicieron sobre el pool del modelo con etiquetas de SECOP (familia_v1); esos rankings y métricas
+quedaron en data/consultas/rankings_modelo_secop.csv y reports/metricas_busqueda_modelo_secop.csv. Cuando la app
+pasó al modelo con etiquetas corregidas (familia_v2) no se juzgó de nuevo:
+    python scripts/10_evaluar_busqueda.py reevaluar
+  vuelve a armar los rankings con el modelo de la app y los evalúa con los juicios que ya existen. Lo que no
+  tiene juicio cuenta como no relevante, así que las cifras son una cota inferior; la columna
+  'juzgado@5' dice qué fracción de los 5 primeros resultados tiene juicio.
 """
 import sys
 from pathlib import Path
@@ -20,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import numpy as np
 import pandas as pd
 
-from radar.config import DATA_PROC, REPORTS, ROOT, SEED
+from radar.config import DATA_PROC, REPORTS, ROOT, SEED, MODELO_APP
 from radar.model import cargar
 from radar.search import BuscadorProcesos
 from radar.text import preparar
@@ -36,7 +44,7 @@ def rankings(k: int = 10) -> pd.DataFrame:
     q = q.dropna(subset=["consulta"])
     p = pd.read_parquet(DATA_PROC / "procesos_idx.parquet")
     B = BuscadorProcesos(p, p.txt_lem.tolist(), p.texto.tolist(), embeddings=np.load(DATA_PROC / "procesos_emb.npy"))
-    m = cargar("familia_v1")
+    m = cargar(MODELO_APP)
     filas = []
     for r in q.itertuples():
         qp = preparar(r.consulta)
@@ -60,27 +68,38 @@ def pool():
     print(f"{J.consulta_id.nunique()} consultas, {len(J)} pares a juzgar → {C / 'juicios.xlsx'}")
 
 
-def evaluar():
-    R = pd.read_csv(C / "rankings.csv")
-    J = pd.read_excel(C / "juicios.xlsx")[["consulta_id", "id_del_proceso", "relevante"]]
+def evaluar(rankings_csv: str = "rankings.csv", salida: str = "metricas_busqueda.csv"):
+    R = pd.read_csv(C / rankings_csv)
+    J = pd.read_excel(C / "juicios.xlsx")[["consulta_id", "id_del_proceso", "texto", "relevante"]]
     if J.relevante.isna().any():
         print(f"Aviso: {J.relevante.isna().sum()} pares sin juzgar se cuentan como no relevantes")
-    R = R.merge(J, on=["consulta_id", "id_del_proceso"], how="left").fillna({"relevante": 0})
+    # El juicio es sobre el texto del proceso: varias entidades publican procesos con el mismo texto y la
+    # búsqueda muestra uno por texto, así que un proceso con el mismo texto que uno juzgado hereda su juicio.
+    Jt = J.groupby(["consulta_id", "texto"], as_index=False).relevante.max()
+    R = R.merge(Jt, on=["consulta_id", "texto"], how="left", indicator=True)
+    R["juzgado"] = (R._merge == "both").astype(int)
+    R = R.fillna({"relevante": 0})
     R["relevante"] = R.relevante.astype(int)
     filas = []
     for (sis, qid), g in R.groupby(["sistema", "consulta_id"]):
-        rel = g.sort_values("posicion").relevante.values
+        g = g.sort_values("posicion")
+        rel = g.relevante.values
         ideal = np.sort(J[J.consulta_id == qid].relevante.fillna(0).astype(int).values)[::-1][:10]
         disc = 1 / np.log2(np.arange(2, 12))
         dcg, idcg = (rel[:10] * disc[:len(rel[:10])]).sum(), (ideal * disc[:len(ideal)]).sum()
-        filas.append({"sistema": sis, "consulta_id": qid, "p@5": rel[:5].mean(), "p@10": rel[:10].mean(),
+        filas.append({"sistema": sis, "consulta_id": qid, "p@5": rel[:5].mean(), "p@10": rel[:10].mean(), "juzgado@5": g.juzgado.values[:5].mean(), "juzgado@10": g.juzgado.values[:10].mean(),
                       "ndcg@10": dcg / idcg if idcg else 0.0})
     D = pd.DataFrame(filas)
-    res = D.groupby("sistema")[["p@5", "p@10", "ndcg@10"]].mean().round(3)
+    res = D.groupby("sistema")[["p@5", "p@10", "ndcg@10", "juzgado@5", "juzgado@10"]].mean().round(3)
     res["n_consultas"] = D.groupby("sistema").size()
-    res.to_csv(REPORTS / "metricas_busqueda.csv")
+    res.to_csv(REPORTS / salida)
     print(res)
 
 
+def reevaluar():
+    rankings().to_csv(C / "rankings.csv", index=False)
+    evaluar()
+
+
 if __name__ == "__main__":
-    {"pool": pool, "evaluar": evaluar}[sys.argv[1]]()
+    {"pool": pool, "evaluar": evaluar, "reevaluar": reevaluar}[sys.argv[1]](*sys.argv[2:])

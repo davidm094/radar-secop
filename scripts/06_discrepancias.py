@@ -1,17 +1,17 @@
 """Paso 7: marca contratos de test donde el modelo contradice el código declarado con confianza alta.
-Salida: reports/discrepancias.csv (insumo para la revisión manual de 100 casos)."""
+Usa el modelo de la app (config.MODELO_APP). Salida: reports/discrepancias.csv."""
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import json
 import pandas as pd
-from radar.config import DATA_PROC, REPORTS
+from radar.config import DATA_PROC, REPORTS, MODELO_APP
 from radar.data import familias_unspsc
 from radar.model import cargar
 
 UMBRAL = 0.70   # ver reports/explicabilidad.json -> calibracion (0,9 cubre solo ~1 %)
 nombres = familias_unspsc()
-m = cargar("familia_v1")
+m = cargar(MODELO_APP)
 df = pd.read_parquet(DATA_PROC / "contratos_prep.parquet")
 ids = set(pd.read_csv(DATA_PROC / "test_ids.csv").iloc[:, 0])
 te = df[df.id_contrato.isin(ids) & df.fam.isin(m.classes_)].copy()
@@ -24,7 +24,7 @@ d.sort_values("conf", ascending=False)[cols].to_csv(REPORTS / "discrepancias.csv
 pares = (d.groupby(["fam", "pred"]).size().sort_values(ascending=False).head(10)
          .reset_index(name="n"))
 pares["de"] = pares.fam.map(nombres); pares["a"] = pares.pred.map(nombres)
-res = {"umbral": UMBRAL, "test": len(te), "marcadas": len(d), "tasa": len(d) / len(te),
+res = {"modelo": MODELO_APP, "umbral": UMBRAL, "test": len(te), "marcadas": len(d), "tasa": len(d) / len(te),
        "desde_8011": float((d.fam == "8011").mean()), "pares": pares.to_dict(orient="records")}
 (REPORTS / "discrepancias_resumen.json").write_text(json.dumps(res, indent=2, ensure_ascii=False))
 print(json.dumps({k: v for k, v in res.items() if k != "pares"}, indent=1))

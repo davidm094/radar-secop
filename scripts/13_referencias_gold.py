@@ -32,7 +32,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import cohen_kappa_score, f1_score
 
-from radar.config import REPORTS, ROOT, SEED
+from radar.config import REPORTS, ROOT, SEED, MODELO_APP, MODELO_SECOP
 from radar.explain import local
 from radar.model import cargar
 from radar.text import preparar
@@ -92,12 +92,16 @@ def main():
             "HC_humano_y_consenso_coinciden": d.humano.where(cons & (d.humano == d.claude_sonnet), "")}
     d["grupo"] = d.estrato.map(grupo_estrato)
 
-    mod = cargar("familia_v1")
+    mod = cargar(MODELO_APP)
+    out["modelo_app"] = MODELO_APP
+    ant = cargar(MODELO_SECOP)   # modelo con las etiquetas de SECOP sin corregir, para comparar
     textos = pd.Series([preparar(t) for t in d.objeto_del_contrato], index=d.index)
     P = mod.predict_proba(textos.tolist())
     top = pd.DataFrame(mod.classes_[np.argsort(-P, 1)[:, :3]], index=d.index)
     d["modelo"] = top[0]
     d["modelo_conf"] = P.max(1)
+    Pa = ant.predict_proba(textos.tolist())
+    top_a = pd.DataFrame(ant.classes_[np.argsort(-Pa, 1)[:, :3]], index=d.index)
 
     out["contra_referencia"] = {}
     for nombre, ref in refs.items():
@@ -120,6 +124,8 @@ def main():
                            "por_grupo": {g: {"accuracy": round(float((p == r)[d.grupo[m] == g].mean()), 3),
                                              "top3": round(float(en3[(d.grupo[m] == g).values].mean()), 3)}
                                          for g in ["8011", "salud", "otras"]}},
+            "modelo_etiquetas_secop": {"accuracy": round(float((top_a[0][m] == r).mean()), 3),
+                                       "top3": round(float(np.mean([g in fila for g, fila in zip(r, top_a[m].values)])), 3)},
         }
         if nombre != "H_humano":   # ¿a dónde deberían ir los contratos declarados en 8011?
             tr = r[(s == "8011") & (r != "8011")].value_counts().head(8)

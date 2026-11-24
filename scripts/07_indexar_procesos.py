@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import numpy as np
 import pandas as pd
-from radar.config import DATA_RAW, DATA_PROC
+from radar.config import DATA_RAW, DATA_PROC, MODELO_APP
 from radar.model import cargar
 from radar.search import _encoder
 from radar.text import limpiar, lematizar
@@ -19,7 +19,7 @@ p = p[p.texto.str.split().str.len() >= 3]
 cod = p.codigo_principal_de_categoria.fillna("").str.extract(r"^V1\.(\d{8})$")[0]
 p["fam"] = cod.str[:4]
 p["txt_lem"] = lematizar(p.texto.map(limpiar).tolist())
-m = cargar("familia_v1")
+m = cargar(MODELO_APP)
 sin = p.fam.isna()
 p.loc[sin, "fam"] = m.predict(p.loc[sin, "txt_lem"])
 p["familia_inferida"] = sin

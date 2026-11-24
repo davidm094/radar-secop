@@ -41,8 +41,16 @@ def test_reportes_coherentes():
     m = pd.read_csv(ROOT / "reports" / "metricas_familia.csv")
     assert len(m) >= 4
     d = pd.read_csv(ROOT / "reports" / "discrepancias.csv")
-    assert len(d) == 1640 and (d.conf >= 0.70).all()
-
+    assert len(d) == 3004 and (d.conf >= 0.70).all()
+    # el modelo de la app (etiquetas de 8011 corregidas) es el que se evalúa contra el gold set
+    dz = json.loads((ROOT / "reports" / "destilacion_8011.json").read_text(encoding="utf-8"))
+    assert dz["regla"]["cumple"] and dz["variantes"]["D"]["alertas_test"]["n"] == len(d)
+    assert ref["modelo_app"] == "familia_v2"
+    for k in ("H_humano", "C_consenso_claude"):
+        assert c[k]["modelo_app"]["accuracy"] == dz["variantes"]["D"]["gold"][k]["accuracy"]
+        assert c[k]["modelo_etiquetas_secop"]["accuracy"] == dz["variantes"]["B"]["gold"][k]["accuracy"]
+    t = json.loads((ROOT / "reports" / "discrepancias_revision_resumen.json").read_text(encoding="utf-8"))["traslado_al_modelo_de_la_app"]
+    assert t["alertas_del_modelo_de_la_app"] == len(d) and t["revisadas_que_siguen_con_la_misma_familia"] == 94
 
 if __name__ == "__main__":
     for nombre, f in list(globals().items()):

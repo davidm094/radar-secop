@@ -204,6 +204,7 @@
     "claude_sonnet": 9,
     "claude_fable": 17
   },
+  "modelo_app": "familia_v2",
   "contra_referencia": {
     "H_humano": {
       "n": 215,
@@ -226,26 +227,30 @@
         "error_a_nivel_segmento": 0.633
       },
       "modelo_app": {
-        "accuracy": 0.228,
-        "macro_f1": 0.11,
-        "top3": 0.405,
-        "accuracy_segmento": 0.372,
-        "acuerdo_del_modelo_con_secop_mismos_items": 0.437,
+        "accuracy": 0.27,
+        "macro_f1": 0.107,
+        "top3": 0.428,
+        "accuracy_segmento": 0.409,
+        "acuerdo_del_modelo_con_secop_mismos_items": 0.33,
         "referencia_fuera_de_las_175_familias": 0.102,
         "por_grupo": {
           "8011": {
-            "accuracy": 0.195,
-            "top3": 0.403
+            "accuracy": 0.299,
+            "top3": 0.442
           },
           "salud": {
-            "accuracy": 0.529,
+            "accuracy": 0.588,
             "top3": 0.735
           },
           "otras": {
-            "accuracy": 0.154,
-            "top3": 0.298
+            "accuracy": 0.144,
+            "top3": 0.317
           }
         }
+      },
+      "modelo_etiquetas_secop": {
+        "accuracy": 0.228,
+        "top3": 0.405
       }
     },
     "C_consenso_claude": {
@@ -269,26 +274,30 @@
         "error_a_nivel_segmento": 0.486
       },
       "modelo_app": {
-        "accuracy": 0.481,
-        "macro_f1": 0.359,
-        "top3": 0.755,
-        "accuracy_segmento": 0.649,
-        "acuerdo_del_modelo_con_secop_mismos_items": 0.438,
+        "accuracy": 0.548,
+        "macro_f1": 0.374,
+        "top3": 0.827,
+        "accuracy_segmento": 0.707,
+        "acuerdo_del_modelo_con_secop_mismos_items": 0.308,
         "referencia_fuera_de_las_175_familias": 0.014,
         "por_grupo": {
           "8011": {
-            "accuracy": 0.434,
-            "top3": 0.735
+            "accuracy": 0.566,
+            "top3": 0.855
           },
           "salud": {
-            "accuracy": 0.552,
-            "top3": 0.897
+            "accuracy": 0.621,
+            "top3": 0.931
           },
           "otras": {
-            "accuracy": 0.5,
-            "top3": 0.729
+            "accuracy": 0.51,
+            "top3": 0.771
           }
         }
+      },
+      "modelo_etiquetas_secop": {
+        "accuracy": 0.481,
+        "top3": 0.755
       },
       "destino_de_los_8011_mal_declarados": {
         "8012": 11,
@@ -322,26 +331,30 @@
         "error_a_nivel_segmento": 0.354
       },
       "modelo_app": {
-        "accuracy": 0.625,
-        "macro_f1": 0.449,
-        "top3": 0.854,
-        "accuracy_segmento": 0.708,
-        "acuerdo_del_modelo_con_secop_mismos_items": 0.438,
+        "accuracy": 0.708,
+        "macro_f1": 0.5,
+        "top3": 0.875,
+        "accuracy_segmento": 0.771,
+        "acuerdo_del_modelo_con_secop_mismos_items": 0.333,
         "referencia_fuera_de_las_175_familias": 0.042,
         "por_grupo": {
           "8011": {
-            "accuracy": 0.579,
+            "accuracy": 0.737,
             "top3": 0.895
           },
           "salud": {
-            "accuracy": 0.818,
+            "accuracy": 0.909,
             "top3": 1.0
           },
           "otras": {
             "accuracy": 0.556,
-            "top3": 0.722
+            "top3": 0.778
           }
         }
+      },
+      "modelo_etiquetas_secop": {
+        "accuracy": 0.625,
+        "top3": 0.854
       },
       "destino_de_los_8011_mal_declarados": {
         "8012": 5,
@@ -356,26 +369,26 @@
     }
   },
   "alertas_en_gold": {
-    "n": 9,
+    "n": 18,
     "H_humano": {
-      "n": 5,
-      "modelo_correcto": 0.6,
-      "secop_correcto": 0.0
+      "n": 13,
+      "modelo_correcto": 0.538,
+      "secop_correcto": 0.077
     },
     "C_consenso_claude": {
-      "n": 9,
-      "modelo_correcto": 0.889,
-      "secop_correcto": 0.111
+      "n": 17,
+      "modelo_correcto": 0.941,
+      "secop_correcto": 0.059
     },
     "HC_humano_y_consenso_coinciden": {
-      "n": 3,
+      "n": 7,
       "modelo_correcto": 1.0,
       "secop_correcto": 0.0
     }
   },
   "plausibilidad_token_f1": {
-    "modelo": 0.287,
-    "azar": 0.173,
+    "modelo": 0.293,
+    "azar": 0.177,
     "n": 212
   }
 }

@@ -1,5 +1,5 @@
-sistema,p@5,p@10,ndcg@10,n_consultas
-familia,0.293,0.303,0.307,30
-hibrido_app,0.587,0.553,0.597,30
-lexico,0.52,0.557,0.61,30
-semantico,0.56,0.553,0.588,30
+sistema,p@5,p@10,ndcg@10,juzgado@5,juzgado@10,n_consultas
+familia,0.053,0.037,0.039,0.073,0.047,30
+hibrido_app,0.62,0.533,0.577,0.987,0.963,30
+lexico,0.52,0.557,0.61,1.0,1.0,30
+semantico,0.56,0.553,0.588,1.0,1.0,30
