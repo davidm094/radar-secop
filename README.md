@@ -5,7 +5,12 @@
 Proyecto final de Procesamiento de Lenguaje Natural, Pontificia Universidad Javeriana.
 Autores: David Moreno y Dierick Brochero.
 
-Documento del proyecto (PDF): [`documento_final.pdf`](documento_final.pdf).
+| Entregable | Dónde está |
+|---|---|
+| Documento final (15 páginas, marco de Ashmore et al., 2021) | [`documento_final.pdf`](documento_final.pdf) |
+| Pipeline y código | `scripts/` (un paso por script) y `src/radar/` |
+| Demo | `streamlit run app/app.py` (ver "Cómo correrlo") |
+| Resultados | `reports/` |
 
 ## Problema y usuario
 
@@ -58,8 +63,10 @@ Esto cambia el diseño del proyecto:
  09 variante con datos corregidos por Claude (solo si kappa Claude–gold ≥ 0,61; no se cumplió)
  10 evaluación de la búsqueda: consultas escritas por personas, juicios a ciegas, P@5 y nDCG@10
  11 revisión humana de 100 alertas de discrepancia
+ 12 clave del gold set (código declarado de cada contrato, que los anotadores no ven)
  13 evaluación final contra el gold set: confiabilidad de cada fuente · error de SECOP por estrato
           │  · modelo vs. referencia humana y vs. consenso de Claude · plausibilidad de la explicación
+ 14 prueba con textos estilo pyme generados por Claude (resultado negativo; no cambia el modelo)
           │
  app/ Streamlit: "Para pymes" · "Revisar un contrato" · "Alertas para veedurías" · "Cómo funciona"
 ```
@@ -76,7 +83,7 @@ Esto cambia el diseño del proyecto:
 | Contrafactual | sin "abogado jurídico", el modelo cae a 8011 con P = 0,16: sin el oficio, solo queda el cajón de sastre |
 | App | se marca **para revisar** (8011 declarado ≠ 8012 sugerido con confianza ≥ 0,70) |
 
-## Resultados actuales
+## Resultados
 
 Contra las etiquetas de SECOP (acuerdo, no exactitud). Familia (175 clases). El test natural tiene la distribución real (63 % de 8011); el balanceado tiene como máximo 300 por familia.
 
@@ -102,7 +109,7 @@ Cómo leer la tabla:
 
 El gold set tiene 300 contratos fuera del entrenamiento. 215 tienen etiqueta humana (un anotador, Dierick Brochero), 53 de ellos tienen además la etiqueta de un segundo anotador (David Moreno, columna `humano2`; anotó consultando a Claude como buscador del catálogo, y el acuerdo entre los dos anotadores humanos en 49 contratos comparables es 22,4 %, kappa 0,20) y los 300 tienen dos anotaciones independientes de Claude (Sonnet 5.5 y Fable 5.2), hechas sin ver el código de SECOP. Todas las etiquetas están en `data/gold/gold_anotaciones.csv`.
 
-**Confiabilidad.** Las dos anotaciones de Claude coinciden entre sí en el 72,6 % de los contratos (kappa 0,72). Las etiquetas humanas coinciden con cada una de ellas en el 27 % (kappa 0,25–0,26) y con SECOP en el 14 %. En un control ciego de 60 contratos, 24 de los 47 desacuerdos son etiquetas humanas que no encajan con la guía (`reports/gold_control_ciego_revision.csv`; esa revisión la hizo Claude y hay que verificarla a mano). Por eso se reporta contra dos referencias: **H** (humana, 215) y **C** (consenso de las dos anotaciones de Claude, 208). Ninguna es una verdad de referencia limpia: H es ruidosa y C no es humana y excluye los casos ambiguos.
+**Confiabilidad.** Las dos anotaciones de Claude coinciden entre sí en el 72,6 % de los contratos (kappa 0,72). Las etiquetas humanas coinciden con cada una de ellas en el 27 % (kappa 0,25–0,26) y con SECOP en el 14 %. En un control ciego de 60 contratos, 24 de los 47 desacuerdos son etiquetas humanas que no encajan con la guía (`reports/gold_control_ciego_revision.csv`; esa revisión la hizo Claude, que es parte interesada; el segundo anotador humano revisó 17 de esos 24 contratos y no coincidió con la primera etiqueta en ninguno). Por eso se reporta contra dos referencias: **H** (humana, 215) y **C** (consenso de las dos anotaciones de Claude, 208). Ninguna es una verdad de referencia limpia: H es ruidosa y C no es humana y excluye los casos ambiguos.
 
 | Medida | H: humana (215) | C: consenso de Claude (208) | H y C coinciden (48) |
 |---|---|---|---|
@@ -129,7 +136,7 @@ El gold set tiene 300 contratos fuera del entrenamiento. 215 tienen etiqueta hum
 
 BETO no supera al modelo lineal en macro-F1 y mejora la accuracy y el top-3 solo en el test natural; con pocas épocas aprende sobre todo las clases grandes.
 
-### Búsqueda (30 consultas escritas por personas, juicios a ciegas)
+### Búsqueda (30 consultas escritas por una persona, 1.002 juicios a ciegas)
 
 | Sistema | P@5 | P@10 | nDCG@10 |
 |---|---|---|---|
@@ -195,6 +202,8 @@ python scripts/10_evaluar_busqueda.py pool                      # luego marcar r
 python scripts/10_evaluar_busqueda.py evaluar
 ```
 
+Pruebas básicas (limpieza de texto, gold fuera del entrenamiento, coherencia de los reportes): `python tests/test_basico.py`.
+
 Los modelos y el índice no se suben al repositorio porque pesan más de 100 MB; se regeneran con los pasos 03 y 07. Los resultados (métricas, explicaciones, discrepancias) quedan en `reports/`.
 
 ## Estructura
@@ -202,29 +211,35 @@ Los modelos y el índice no se suben al repositorio porque pesan más de 100 MB;
 ```
 src/radar/      config · data (descarga SODA y catálogo) · text (limpieza y lematización) · labels (niveles,
                 split, balanceo, exclusión del gold) · model · evaluate (métricas y ECE) · explain · search
-scripts/        00–13, un paso del pipeline cada uno (00 = datos congelados, 11 = revisión de discrepancias,
-                12 = clave del gold set, 13 = evaluación final contra el gold con dos referencias)
+scripts/        00–14, un paso del pipeline cada uno (00 = datos congelados, 11 = revisión de discrepancias,
+                12 = clave del gold set, 13 = evaluación final contra el gold con dos referencias,
+                14 = prueba con textos estilo pyme)
 app/app.py      demo en Streamlit
 llm/            re-etiquetado y aumento con Claude Code (ver llm/README.md)
 notebooks/      beto_colab.ipynb: BETO afinado en Colab (GPU) con el mismo split que el modelo lineal
 data/beto/      split congelado (train balanceado + test) para que la comparación con BETO sea justa
-data/gold/      ids del gold set y planillas de anotación
+data/gold/      gold set: ids, plantilla de anotación, clave y todas las etiquetas con su procedencia (gold_anotaciones.csv)
+data/consultas/ consultas de pyme, juicios de relevancia y rankings de la evaluación de búsqueda
+data/congelado/ foto de los datos del 14-oct-2026 para reproducir las cifras
 reports/        métricas y salidas de cada paso
-tests/          simulador de Claude para probar llm/ sin gastar cuota
+tests/          pruebas básicas (test_basico.py) y simulador de Claude para probar llm/ sin gastar cuota
 ```
 
 ## Uso de LLM
 
-Claude se usa para dos tareas de preparación de datos y **nunca** en la app ni en la evaluación:
+Claude **nunca** predice en la app. Se usó para tres cosas, todas declaradas:
 
-1. re-etiquetar contratos con la misma guía que los anotadores humanos, validado primero contra el gold set;
-2. generar descripciones de negocio estilo pyme para entrenamiento.
+1. anotar dos veces los 300 contratos del gold set con la misma guía que los anotadores humanos y sin ver el código declarado (Sonnet 5.5 y Fable 5.2). Esas anotaciones son la segunda referencia de la evaluación, reportada siempre aparte de la humana;
+2. re-etiquetar contratos de entrenamiento: **no se hizo**, porque no se cumplió la compuerta (kappa Claude–humano 0,25 < 0,61);
+3. generar 7.001 descripciones de negocio estilo pyme: se probaron (paso 14) y no mejoraron la búsqueda, así que el modelo de la app no las usa.
 
 Detalle, comandos y controles en [`llm/README.md`](llm/README.md).
 
 ## Limitaciones conocidas
 
-- Las etiquetas de entrenamiento son las de SECOP, con el sesgo descrito; el gold set es pequeño (300).
+- Las etiquetas de entrenamiento son las de SECOP, con el sesgo descrito.
+- El gold set es pequeño (300) y su parte humana resultó poco confiable (kappa 0,20 entre los dos anotadores humanos); la referencia alternativa no es humana. Por eso la exactitud del modelo se reporta como un rango.
+- Las 30 consultas de búsqueda y la revisión de 100 alertas las hizo una sola persona.
 - El lematizador de spaCy comete errores en algunas palabras ("área" → "areo"); se usa el modelo `es_core_news_sm` 3.7 con spaCy 3.8.
 - Al quitar las fórmulas aparecen atajos de oficina y municipio; con entidades nuevas el desempeño cae.
 - El catálogo en español disponible es v14; la guía 2026 cita UNSPSC v26, publicado solo en inglés.

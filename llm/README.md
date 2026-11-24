@@ -1,6 +1,13 @@
 # Uso de Claude en Radar SECOP
 
-Claude (Anthropic) se usa **solo para preparar datos de entrenamiento**, nunca dentro de la app ni para evaluar.
+> **Estado final (24-nov-2026).** Se corrió el re-etiquetado de los 300 contratos del gold set (dos veces, con Sonnet 5.5
+> y Fable 5.2) y el aumento estilo pyme (7.001 textos). El re-etiquetado a escala **no** se corrió: el kappa de Claude
+> contra el gold humano fue 0,25, por debajo de la compuerta de 0,61. Las dos anotaciones de Claude del gold set terminaron
+> usándose como segunda referencia de la evaluación, declarada como tal (`scripts/13_referencias_gold.py`). Los textos
+> estilo pyme se probaron en `scripts/14_prueba_textos_pyme.py` y no cambiaron el modelo de la app. Lo que sigue es el
+> procedimiento tal como se diseñó.
+
+Claude (Anthropic) nunca corre dentro de la app. Se diseñó para preparar datos de entrenamiento y para medir su acuerdo con el gold set.
 Se corre con **Claude Code en modo no interactivo** (`claude -p`), que entra en la suscripción Pro/Max
 del usuario y no requiere API de pago. El límite de uso se comparte con claude.ai, así que los scripts se
 pueden cortar y retomar.
