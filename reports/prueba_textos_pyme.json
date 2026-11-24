@@ -1,0 +1,53 @@
+{
+  "textos_pyme": 7001,
+  "familias": 175,
+  "consultas_con_relevantes": 29,
+  "procesos_relevantes_con_codigo": 285,
+  "gold_consenso_n": 208,
+  "variantes": {
+    "B (modelo de la app)": {
+      "n_entrenamiento": 52555,
+      "test_natural": {
+        "accuracy": 0.397,
+        "macro_f1": 0.302,
+        "top3": 0.704
+      },
+      "test_balanceado": {
+        "accuracy": 0.559,
+        "macro_f1": 0.407,
+        "top3": 0.759
+      },
+      "gold_consenso_claude": {
+        "accuracy": 0.481,
+        "top3": 0.755
+      },
+      "consultas_pyme": {
+        "familia_del_proceso_relevante_en_top3": 0.604,
+        "promedio_por_consulta": 0.57,
+        "confianza_media_top1": 0.413
+      }
+    },
+    "B + textos estilo pyme": {
+      "n_entrenamiento": 59556,
+      "test_natural": {
+        "accuracy": 0.397,
+        "macro_f1": 0.307,
+        "top3": 0.701
+      },
+      "test_balanceado": {
+        "accuracy": 0.561,
+        "macro_f1": 0.424,
+        "top3": 0.761
+      },
+      "gold_consenso_claude": {
+        "accuracy": 0.476,
+        "top3": 0.755
+      },
+      "consultas_pyme": {
+        "familia_del_proceso_relevante_en_top3": 0.568,
+        "promedio_por_consulta": 0.538,
+        "confianza_media_top1": 0.471
+      }
+    }
+  }
+}

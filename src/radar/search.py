@@ -35,12 +35,17 @@ class BuscadorProcesos:
         self.fam = self.p["fam"].fillna("").values
 
     def buscar(self, consulta_cruda: str, consulta_preparada: str, probs_familia: dict[str, float],
-               k: int = 10, w_emb: float = 0.5, w_tfidf: float = 0.3, w_fam: float = 0.2) -> pd.DataFrame:
+               k: int = 10, w_emb: float = 0.5, w_tfidf: float = 0.3, w_fam: float = 0.2,
+               mascara: np.ndarray | None = None) -> pd.DataFrame:
+        """mascara: booleano por proceso; si se pasa, solo se devuelven procesos con True (filtros de la app)."""
         s_emb = (self.Xe @ _unit(self.enc.encode([consulta_cruda])).T).ravel()
         s_tf = linear_kernel(self.tfidf.transform([consulta_preparada]), self.Xt).ravel()
         s_fam = np.array([probs_familia.get(f, 0.0) for f in self.fam])
         score = w_emb * s_emb + w_tfidf * s_tf + w_fam * s_fam
+        if mascara is not None:
+            score = np.where(mascara, score, -np.inf)
         idx = np.argsort(-score)[:k * 3]
+        idx = idx[np.isfinite(score[idx])]
         res = self.p.iloc[idx].assign(score=score[idx], sim_semantica=s_emb[idx],
                                       sim_lexica=s_tf[idx], p_familia=s_fam[idx])
         # varias entidades publican procesos con el mismo texto: se muestra uno por texto

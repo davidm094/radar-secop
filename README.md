@@ -61,7 +61,7 @@ Esto cambia el diseño del proyecto:
  13 evaluación final contra el gold set: confiabilidad de cada fuente · error de SECOP por estrato
           │  · modelo vs. referencia humana y vs. consenso de Claude · plausibilidad de la explicación
           │
- app/ Streamlit: "Para pymes" · "Revisar un contrato" · "Cómo funciona"
+ app/ Streamlit: "Para pymes" · "Revisar un contrato" · "Alertas para veedurías" · "Cómo funciona"
 ```
 
 ### Ejemplo real de punta a punta
@@ -115,7 +115,8 @@ El gold set tiene 300 contratos fuera del entrenamiento. 215 tienen etiqueta hum
 - Lo firme: casi todo lo declarado en 8011 en la muestra corresponde a otra familia, con cualquier referencia.
 - Lo abierto: la exactitud del modelo a nivel de familia está entre 0,23 y 0,48 según la referencia.
 - Plausibilidad de la explicación (F1 de palabras frente a las palabras clave humanas): 0,287 vs. 0,173 al azar.
-- Kappa Claude–humano = 0,25, por debajo de la compuerta de 0,61: el paso 09 (entrenar con datos corregidos por Claude) **no se corrió** y los textos estilo pyme de `data/llm/aumentado.jsonl` no se usaron.
+- Kappa Claude–humano = 0,25, por debajo de la compuerta de 0,61: el paso 09 (entrenar con datos corregidos por Claude) **no se corrió**.
+- Los textos estilo pyme de `data/llm/aumentado.jsonl` no dependen de esa compuerta y se probaron aparte (`scripts/14_prueba_textos_pyme.py` → `reports/prueba_textos_pyme.json`): el macro-F1 balanceado sube de 0,407 a 0,424, el gold queda igual (0,481 → 0,476 contra el consenso de Claude) y con las consultas de pyme la familia del proceso relevante queda en el top-3 en 56,8 % frente a 60,4 % sin ellos. Es un resultado negativo: el modelo de la app no cambió.
 
 ### BETO frente al modelo lineal (175 clases, mismo split)
 
@@ -186,6 +187,7 @@ Con el gold set anotado y, opcionalmente, con Claude:
 ```bash
 python scripts/08_acuerdo_gold.py --desacuerdos                 # inconsistencias de anotación, sin abrir la clave
 python scripts/13_referencias_gold.py                           # evaluación final contra el gold (dos referencias)
+python scripts/14_prueba_textos_pyme.py                         # prueba: entrenar con los textos estilo pyme (no cambia el modelo de la app)
 python scripts/11_revisar_discrepancias.py evaluar              # precisión de la alerta (revisión humana)
 python llm/reetiquetar.py --entrada data/gold/gold_set_plantilla.xlsx --salida data/llm/gold_claude.jsonl
 python scripts/09_entrenar_con_llm.py                           # solo corre si kappa Claude–gold ≥ 0,61

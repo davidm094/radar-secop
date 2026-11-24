@@ -76,3 +76,8 @@ def cargar_unspsc() -> pd.DataFrame:
 def familias_unspsc() -> dict[str, str]:
     u = cargar_unspsc()
     return dict(zip(u["fam"], u["nombre_fam"].str.strip()))
+
+
+def segmentos_unspsc() -> dict[str, str]:
+    u = cargar_unspsc()
+    return dict(zip(u["seg"], u["nombre_seg"].str.strip()))
