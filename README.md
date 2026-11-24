@@ -170,6 +170,13 @@ Se fija el modelo de spaCy 3.7.0 porque es con el que se calcularon las cifras (
 que trae el repo y sáltese los pasos 01 y 02 (SECOP cambia a diario, así que descargar de nuevo da otras cifras):
 
 ```bash
+python scripts/preparar_demo.py             # hace los tres pasos de abajo solo si faltan (unos 25 min la primera vez)
+streamlit run app/app.py
+```
+
+o paso a paso:
+
+```bash
 python scripts/00_usar_datos_congelados.py  # copia data/congelado/ a data/processed/ y data/raw/
 python scripts/03_entrenar_evaluar.py       # ~5 min; test balanceado B: macro-F1 0,407, top-3 0,759
 python scripts/07_indexar_procesos.py       # ~20 min

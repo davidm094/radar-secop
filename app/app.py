@@ -85,28 +85,65 @@ def grafico_explicacion(exp: pd.DataFrame):
 MODELO, NOMBRES, VECINOS, SEGMENTOS = recursos()
 
 st.title("Radar SECOP")
-st.write("Encuentre en qué categoría del Estado encaja su negocio y qué procesos de SECOP II le sirven.")
+st.write("Para **pymes**: encuentre en qué categoría del Estado encaja su negocio y qué procesos de SECOP II le sirven. "
+         "Para **veedurías**: revise si el código declarado de un contrato coincide con lo que dice su objeto.")
 tab_pyme, tab_audit, tab_alertas, tab_info = st.tabs(
     ["🔎 Para pymes", "🧾 Revisar un contrato", "🚩 Alertas para veedurías", "ℹ️ Cómo funciona"])
 
+EJEMPLOS_PYME = {
+    "Aires acondicionados": "Hacemos mantenimiento preventivo y correctivo de aires acondicionados para oficinas y hospitales",
+    "Software a la medida": "Somos una empresa de desarrollo de software a la medida y soporte de aplicaciones web",
+    "Refrigerios y eventos": "Preparamos refrigerios, almuerzos y servicio de catering para eventos y capacitaciones",
+    "Aseo y cafetería": "Prestamos servicio de aseo, limpieza y cafetería para edificios de oficinas",
+}
+EJEMPLOS_CONTRATO = {
+    "Abogado en 8011": ("Prestación de servicios profesionales como abogado para el acompañamiento jurídico "
+                        "de la personería municipal", "80111600"),
+    "Contador en 8011": ("Prestar servicios profesionales como contador público para apoyar la elaboración de los "
+                         "estados financieros y las conciliaciones contables de la entidad", "80111600"),
+    "Código que coincide": ("Suministro de combustible gasolina corriente y ACPM para los vehículos del municipio", "15101500"),
+}
+
+
+def pesos(x) -> str:
+    return "" if pd.isna(x) else "$" + f"{x:,.0f}".replace(",", ".")
+
+
+def enlace(u) -> str:
+    """La API entrega el enlace como {"url": "..."}; se deja solo la dirección para que sea clicable."""
+    return u.get("url", "") if isinstance(u, dict) else (u or "")
+
+
 # ---------------------------------------------------------------- Pymes
 with tab_pyme:
-    q = st.text_area("Describa con sus palabras qué vende o qué servicio presta",
-                     "Hacemos mantenimiento preventivo y correctivo de aires acondicionados para oficinas")
+    st.caption("Ejemplos para probar:")
+    for col, (rotulo, texto) in zip(st.columns(len(EJEMPLOS_PYME)), EJEMPLOS_PYME.items()):
+        if col.button(rotulo, key=f"ej_{rotulo}", width="stretch"):
+            st.session_state["q_pyme"] = texto
+            st.session_state["consulta_pyme"] = texto      # un ejemplo busca de una vez
+    q = st.text_area("Describa con sus palabras qué vende o qué servicio presta", key="q_pyme",
+                     placeholder="Por ejemplo: vendemos e instalamos cámaras de seguridad y alarmas")
     try:
         B = buscador()
         f1, f2 = st.columns(2)
-        deptos = f1.multiselect("Departamento de la entidad (opcional)", sorted(B.p.departamento_entidad.dropna().unique()),
+        deptos = f1.multiselect("Departamento de la entidad (opcional)",
+                                sorted(d for d in B.p.departamento_entidad.dropna().unique() if d != "No Definido"),
                                 placeholder="Todos los departamentos")
         solo_abiertos = f2.checkbox("Solo procesos en estado Abierto", value=False,
                                     help="Por defecto se incluyen los procesos Publicados y los Abiertos.")
     except FileNotFoundError:
         B, deptos, solo_abiertos = None, [], False
-    if st.button("Buscar", type="primary") and q.strip():
+    if st.button("Buscar", type="primary"):
+        st.session_state["consulta_pyme"] = q
+    q = st.session_state.get("consulta_pyme", "")       # la consulta se conserva al cambiar filtros o de pestaña
+    if q.strip() and len(preparar(q).split()) < 2:
+        st.warning("La descripción es muy corta. Escriba al menos qué vende o qué servicio presta y para quién.")
+    elif q.strip():
         qp = preparar(q)
         P = MODELO.predict_proba([qp])[0]
         orden = np.argsort(-P)[:3]
         st.subheader("Categorías sugeridas (familia UNSPSC)")
+        st.caption(f"Para: “{q}”")
         cols = st.columns(3)
         for c, i in zip(cols, orden):
             c.metric(nombre(MODELO.classes_[i]), f"{P[i]:.0%}")
@@ -117,7 +154,10 @@ with tab_pyme:
             v = VECINOS.buscar(qp, k=3)
             v["familia"] = v.fam.map(nombre)
             st.dataframe(v[["objeto_del_contrato", "nombre_entidad", "familia", "similitud"]],
-                         hide_index=True, width="stretch")
+                         hide_index=True, width="stretch",
+                         column_config={"objeto_del_contrato": st.column_config.TextColumn("objeto del contrato", width="large"),
+                                        "nombre_entidad": "entidad",
+                                        "similitud": st.column_config.ProgressColumn("parecido", min_value=0, max_value=1)})
         st.subheader("Procesos publicados que le pueden servir")
         if B is None:
             st.warning("Falta el índice de procesos: corra scripts/07_indexar_procesos.py")
@@ -133,46 +173,64 @@ with tab_pyme:
                 st.info("No hay procesos con esos filtros. Quite alguno y vuelva a buscar.")
             else:
                 r["familia"] = r.fam.map(nombre) + np.where(r.familia_inferida, " (inferida)", "")
-                r["precio_base"] = r.precio_base.map(lambda x: f"${x:,.0f}" if pd.notna(x) else "")
-                # la API entrega el enlace como {"url": "..."}; se deja solo la dirección para que sea clicable
-                r["urlproceso"] = r.urlproceso.map(lambda u: u.get("url", "") if isinstance(u, dict) else (u or ""))
-                st.dataframe(r[["texto", "entidad", "departamento_entidad", "precio_base", "familia",
-                                "estado_del_procedimiento", "score", "urlproceso"]],
-                             hide_index=True, width="stretch",
-                             column_config={"urlproceso": st.column_config.LinkColumn("SECOP", display_text="abrir"),
+                r["precio_base"] = r.precio_base.map(pesos)
+                r["urlproceso"] = r.urlproceso.map(enlace)
+                r["departamento_entidad"] = r.departamento_entidad.replace("No Definido", "")
+                st.dataframe(r[["urlproceso", "texto", "entidad", "departamento_entidad", "precio_base",
+                                "estado_del_procedimiento", "familia", "score"]],
+                             hide_index=True, width="stretch", height=390,
+                             column_config={"urlproceso": st.column_config.LinkColumn("SECOP", display_text="abrir", width="small"),
+                                            "texto": st.column_config.TextColumn("proceso", width="large"),
+                                            "departamento_entidad": "departamento", "precio_base": "precio base",
+                                            "estado_del_procedimiento": "estado",
                                             "score": st.column_config.ProgressColumn("ajuste", min_value=0, max_value=1)})
-                st.caption("Ajuste = 0,5·similitud semántica + 0,3·similitud de términos + 0,2·probabilidad de la familia. "
-                           "Los procesos son una foto del día de descarga; verifique el estado en SECOP.")
+                st.caption(f"{int(mascara.sum()):,} procesos en la búsqueda. ".replace(",", ".")
+                           + "Ajuste = 0,5·similitud semántica + 0,3·similitud de términos + 0,2·probabilidad de la familia. "
+                           "“(inferida)” = el proceso venía sin código y la familia la estimó el modelo. "
+                           "Los procesos son una foto de octubre de 2026; verifique el estado en SECOP.")
 
 # ---------------------------------------------------------------- Auditoría
 with tab_audit:
-    st.write("Pegue el objeto de un contrato y su código UNSPSC declarado. "
-             "Si el modelo sugiere otra familia con confianza alta, se marca **para revisar** "
-             "(una discrepancia no es un error ni una irregularidad: es un dato a verificar).")
-    obj = st.text_area("Objeto del contrato",
-                       "Prestación de servicios profesionales como abogado para el acompañamiento jurídico "
-                       "de la personería municipal")
-    cod = st.text_input("Código declarado (8 dígitos)", "80111600")
-    if st.button("Revisar") and obj.strip():
-        qp = preparar(obj)
-        P = MODELO.predict_proba([qp])[0]
-        i = P.argmax()
-        pred, conf, decl = MODELO.classes_[i], float(P[i]), cod.strip()[:4]
+    st.write("Pegue el objeto de un contrato y el código UNSPSC declarado. "
+             "Si no coinciden con confianza alta, el contrato queda **para revisar** (no es una acusación).")
+    st.caption("Ejemplos para probar:")
+    for col, (rotulo, (texto, cod)) in zip(st.columns(len(EJEMPLOS_CONTRATO)), EJEMPLOS_CONTRATO.items()):
+        if col.button(rotulo, key=f"ejc_{rotulo}", width="stretch"):
+            st.session_state["obj_contrato"], st.session_state["cod_contrato"] = texto, cod
+            st.session_state["revision"] = (texto, cod)
+    obj = st.text_area("Objeto del contrato", key="obj_contrato",
+                       placeholder="Pegue aquí el objeto tal como aparece en SECOP")
+    cod = st.text_input("Código UNSPSC declarado (8 dígitos, con o sin 'V1.')", key="cod_contrato", placeholder="80111600")
+    if st.button("Revisar", type="primary"):
+        st.session_state["revision"] = (obj, cod)
+    obj, cod = st.session_state.get("revision", ("", ""))
+    digitos = "".join(ch for ch in cod if ch.isdigit())
+    if obj.strip() and len(digitos) < 4:
+        st.warning("Escriba el código UNSPSC declarado (al menos los 4 primeros dígitos).")
+    elif obj.strip():
+        fam_decl = digitos[:4]
+        op = preparar(obj)
+        P = MODELO.predict_proba([op])[0]
+        i = int(np.argmax(P))
+        pred, conf = MODELO.classes_[i], float(P[i])
         c1, c2 = st.columns(2)
-        c1.metric("Familia declarada", nombre(decl))
+        c1.metric("Familia declarada", nombre(fam_decl))
         c2.metric("Familia sugerida por el modelo", nombre(pred), f"confianza {conf:.0%}", delta_color="off", delta_arrow="off")
-        if pred != decl and conf >= UMBRAL_APP:
-            st.error("Posible discrepancia: la descripción apunta a otra familia. Para revisar.")
-        elif pred != decl:
-            st.warning("El modelo sugiere otra familia, pero con confianza baja: no se marca.")
+        if fam_decl not in NOMBRES:
+            st.warning(f"La familia {fam_decl} no existe en el catálogo UNSPSC v14. Revise el código.")
+        elif pred != fam_decl and conf >= UMBRAL_APP:
+            st.warning("Posible discrepancia: el objeto del contrato apunta a otra familia. Conviene revisarlo.")
+        elif pred != fam_decl:
+            st.info("El modelo sugiere otra familia, pero con poca confianza. No se marca.")
         else:
             st.success("La familia declarada coincide con la sugerida.")
+        if fam_decl in NOMBRES and fam_decl not in MODELO.classes_:
+            st.caption(f"La familia {fam_decl} tiene muy pocos contratos y el modelo no la conoce; no puede sugerirla.")
         aviso_segmento(P)
-        st.write("**Términos que explican la sugerencia**")
-        grafico_explicacion(local(MODELO, qp, pred, k=8))
-        st.write("**Texto que ve el modelo** (sin fórmulas de contratación, lematizado):")
-        st.code(qp or "(vacío)")
-        st.caption("Texto antes de lematizar: " + limpiar(obj))
+        st.write("**Términos que explican la sugerencia:**")
+        grafico_explicacion(local(MODELO, op, pred, k=8))
+        with st.expander("Texto que ve el modelo (sin fórmulas de contratación, lematizado)"):
+            st.code(op)
 
 # ---------------------------------------------------------------- Alertas
 with tab_alertas:
@@ -202,10 +260,12 @@ with tab_alertas:
         m2.metric("Entidades", V.nombre_entidad.nunique())
         m3.metric("Declaradas en 8011", f"{(V.fam == '8011').mean():.0%}" if len(V) else "–")
         T = V.assign(declarada=V.fam.map(nombre), sugerida=V.pred.map(nombre))
-        st.dataframe(T[["objeto_del_contrato", "nombre_entidad", "declarada", "sugerida", "conf"]],
+        st.dataframe(T[["objeto_del_contrato", "nombre_entidad", "declarada", "sugerida", "conf", "id_contrato"]],
                      hide_index=True, width="stretch", height=320,
                      column_config={"conf": st.column_config.ProgressColumn("confianza", min_value=0, max_value=1),
-                                    "objeto_del_contrato": st.column_config.TextColumn("objeto", width="large")})
+                                    "objeto_del_contrato": st.column_config.TextColumn("objeto del contrato", width="large"),
+                                    "nombre_entidad": "entidad",
+                                    "id_contrato": st.column_config.TextColumn("id en SECOP", help="Con este id se busca el contrato en SECOP II")})
         st.download_button("Descargar esta lista (CSV)", T.to_csv(index=False).encode("utf-8-sig"),
                            "alertas_radar_secop.csv", "text/csv")
         g1, g2 = st.columns(2)
@@ -220,7 +280,8 @@ with tab_alertas:
             st.write("**¿Por qué se marcó un contrato?**")
             op = st.selectbox("Contrato", V.index, format_func=lambda i: f"{V.conf[i]:.0%} · {V.objeto_del_contrato[i][:110]}")
             fila = V.loc[op]
-            st.write(f"Declarada: **{nombre(fila.fam)}** · Sugerida: **{nombre(fila.pred)}**")
+            st.write(f"Entidad: {fila.nombre_entidad} · id en SECOP: `{fila.id_contrato}`")
+            st.write(f"Declarada: **{nombre(fila.fam)}** · Sugerida: **{nombre(fila.pred)}** ({fila.conf:.0%})")
             st.write(fila.objeto_del_contrato)
             grafico_explicacion(local(MODELO, preparar(fila.objeto_del_contrato), fila.pred, k=8))
 
