@@ -115,6 +115,90 @@
       }
     }
   },
+  "segundo_anotador_humano": {
+    "n_anotados": 53,
+    "n_excluidos_por_consulta_del_caso": 4,
+    "nota": "humano2 consultó a Claude como buscador del catálogo; su acuerdo con Claude es una cota superior",
+    "humano__humano2": {
+      "n": 49,
+      "familia": {
+        "acuerdo": 0.224,
+        "kappa": 0.198
+      },
+      "segmento": {
+        "acuerdo": 0.449,
+        "kappa": 0.406
+      }
+    },
+    "humano2__claude_fable": {
+      "n": 49,
+      "familia": {
+        "acuerdo": 0.531,
+        "kappa": 0.515
+      },
+      "segmento": {
+        "acuerdo": 0.694,
+        "kappa": 0.667
+      }
+    },
+    "humano2__claude_sonnet": {
+      "n": 49,
+      "familia": {
+        "acuerdo": 0.408,
+        "kappa": 0.394
+      },
+      "segmento": {
+        "acuerdo": 0.592,
+        "kappa": 0.563
+      }
+    },
+    "humano2__secop": {
+      "n": 49,
+      "familia": {
+        "acuerdo": 0.306,
+        "kappa": 0.294
+      },
+      "segmento": {
+        "acuerdo": 0.51,
+        "kappa": 0.461
+      }
+    },
+    "humano__claude_fable_mismos_items": {
+      "n": 49,
+      "familia": {
+        "acuerdo": 0.224,
+        "kappa": 0.208
+      },
+      "segmento": {
+        "acuerdo": 0.408,
+        "kappa": 0.368
+      }
+    },
+    "tercer_juez_por_resultado_de_la_revision": {
+      "ambas defendibles": {
+        "n": 21,
+        "humano2_igual_a_humano": 2,
+        "humano2_igual_a_claude_fable": 13,
+        "humano2_distinto_de_ambos": 6
+      },
+      "coinciden": {
+        "n": 11,
+        "humano2_igual_a_humano": 9,
+        "humano2_igual_a_claude_fable": 9,
+        "humano2_distinto_de_ambos": 2
+      },
+      "etiqueta humana no encaja con la guía": {
+        "n": 17,
+        "humano2_igual_a_humano": 0,
+        "humano2_igual_a_claude_fable": 4,
+        "humano2_distinto_de_ambos": 13
+      }
+    },
+    "declarados_8011": {
+      "n": 16,
+      "humano2_los_saca_de_8011": 16
+    }
+  },
   "no_clasificable": {
     "humano": 0,
     "claude_sonnet": 9,

@@ -100,7 +100,7 @@ Cómo leer la tabla:
 
 ### Evaluación contra el gold set (paso 13)
 
-El gold set tiene 300 contratos fuera del entrenamiento. 215 tienen etiqueta humana (un solo anotador, Dierick Brochero) y los 300 tienen dos anotaciones independientes de Claude (Sonnet 5.5 y Fable 5.2), hechas sin ver el código de SECOP. Todas las etiquetas están en `data/gold/gold_anotaciones.csv`.
+El gold set tiene 300 contratos fuera del entrenamiento. 215 tienen etiqueta humana (un anotador, Dierick Brochero), 53 de ellos tienen además la etiqueta de un segundo anotador (David Moreno, columna `humano2`; anotó consultando a Claude como buscador del catálogo, y el acuerdo entre los dos anotadores humanos en 49 contratos comparables es 22,4 %, kappa 0,20) y los 300 tienen dos anotaciones independientes de Claude (Sonnet 5.5 y Fable 5.2), hechas sin ver el código de SECOP. Todas las etiquetas están en `data/gold/gold_anotaciones.csv`.
 
 **Confiabilidad.** Las dos anotaciones de Claude coinciden entre sí en el 72,6 % de los contratos (kappa 0,72). Las etiquetas humanas coinciden con cada una de ellas en el 27 % (kappa 0,25–0,26) y con SECOP en el 14 %. En un control ciego de 60 contratos, 24 de los 47 desacuerdos son etiquetas humanas que no encajan con la guía (`reports/gold_control_ciego_revision.csv`; esa revisión la hizo Claude y hay que verificarla a mano). Por eso se reporta contra dos referencias: **H** (humana, 215) y **C** (consenso de las dos anotaciones de Claude, 208). Ninguna es una verdad de referencia limpia: H es ruidosa y C no es humana y excluye los casos ambiguos.
 

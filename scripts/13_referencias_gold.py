@@ -1,7 +1,12 @@
 """Evaluación final contra el gold set, con dos referencias y su confiabilidad.
 
 Entrada: data/gold/gold_anotaciones.csv (una fila por contrato del gold set, 300):
-  humano            familia anotada por una persona (215 contratos; vacío en los otros 85)
+  humano            familia anotada por una persona (Dierick Brochero; 215 contratos, vacío en los otros 85)
+  humano2           segundo anotador humano (David Moreno, 24-nov-2026) sobre 53 de los 60 contratos del control
+                    ciego. Anotó con la guía y consultó a Claude como buscador del catálogo (preguntas generales
+                    del tipo "dónde van los servicios de X"), así que su acuerdo con Claude no es independiente.
+                    humano2_caso_consultado_con_claude = sí marca 4 contratos cuyo texto se discutió con Claude;
+                    esos se excluyen del acuerdo.
   claude_sonnet     anotación de Claude Sonnet 5.5 (llm/reetiquetar.py, 14-oct-2026), sin ver el código de SECOP
   claude_fable      segunda anotación de Claude (Fable 5.2, 20-nov-2026), independiente de la primera y
                     sin ver el código de SECOP ni las otras etiquetas
@@ -61,6 +66,23 @@ def main():
     out["control_ciego_60"] = {"humano__claude_fable": acuerdo(ctrl.humano, ctrl.claude_fable),
                                "humano__claude_sonnet": acuerdo(ctrl.humano, ctrl.claude_sonnet),
                                "claude_sonnet__claude_fable": acuerdo(ctrl.claude_sonnet, ctrl.claude_fable)}
+    # Segundo anotador humano (parcial): acuerdo entre personas y papel de tercer juez en el control ciego
+    if "humano2" in d and (d.humano2 != "").any():
+        h2 = d[(d.humano2 != "") & (d.humano2_caso_consultado_con_claude != "sí")]
+        s2 = {"n_anotados": int((d.humano2 != "").sum()), "n_excluidos_por_consulta_del_caso": int((d.humano2_caso_consultado_con_claude == "sí").sum()),
+              "nota": "humano2 consultó a Claude como buscador del catálogo; su acuerdo con Claude es una cota superior",
+              "humano__humano2": acuerdo(h2.humano, h2.humano2), "humano2__claude_fable": acuerdo(h2.humano2, h2.claude_fable),
+              "humano2__claude_sonnet": acuerdo(h2.humano2, h2.claude_sonnet), "humano2__secop": acuerdo(h2.humano2, h2.secop),
+              "humano__claude_fable_mismos_items": acuerdo(h2.humano, h2.claude_fable)}
+        rev = pd.read_csv(REPORTS / "gold_control_ciego_revision.csv", dtype=str).fillna("").set_index("item_id").resultado.reindex(h2.index)
+        s2["tercer_juez_por_resultado_de_la_revision"] = {
+            r: {"n": int((rev == r).sum()), "humano2_igual_a_humano": int(((h2.humano2 == h2.humano) & (rev == r)).sum()),
+                "humano2_igual_a_claude_fable": int(((h2.humano2 == h2.claude_fable) & (rev == r)).sum()),
+                "humano2_distinto_de_ambos": int(((h2.humano2 != h2.humano) & (h2.humano2 != h2.claude_fable) & (rev == r)).sum())}
+            for r in sorted(set(rev))}
+        e = h2[h2.secop == "8011"]
+        s2["declarados_8011"] = {"n": len(e), "humano2_los_saca_de_8011": int((e.humano2 != "8011").sum())}
+        out["segundo_anotador_humano"] = s2
     out["no_clasificable"] = {f: int((d[f] == "NC").sum()) for f in ["humano", "claude_sonnet", "claude_fable"]}
 
     # 2. Referencias
