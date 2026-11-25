@@ -113,9 +113,9 @@ Cómo leer la tabla:
 
 ### Evaluación contra el gold set (paso 13)
 
-El gold set tiene 300 contratos fuera del entrenamiento. 215 tienen etiqueta humana (un anotador, Dierick Brochero), 53 de ellos tienen además la etiqueta de un segundo anotador (David Moreno, columna `humano2`; anotó consultando a Claude como buscador del catálogo, y el acuerdo entre los dos anotadores humanos en 49 contratos comparables es 22,4 %, kappa 0,20) y los 300 tienen dos anotaciones independientes de Claude (Sonnet 5.5 y Fable 5.2), hechas sin ver el código de SECOP. Todas las etiquetas están en `data/gold/gold_anotaciones.csv`.
+El gold set tiene 300 contratos fuera del entrenamiento. La anotación tiene dos capas: anotación humana de 215 contratos (Dierick Brochero) y anotación doble para validarla. Esa segunda capa son dos anotaciones independientes de Claude sobre los 300 (Sonnet 5.5 y Fable 5.2, sin ver el código de SECOP) y un segundo anotador humano (David Moreno, columna `humano2`) en 53 contratos de un bloque de control, 49 comparables; consultó el catálogo con ayuda de Claude, como se usaría un buscador. Todas las etiquetas están en `data/gold/gold_anotaciones.csv`.
 
-**Confiabilidad.** Las dos anotaciones de Claude coinciden entre sí en el 72,6 % de los contratos (kappa 0,72). Las etiquetas humanas coinciden con cada una de ellas en el 27 % (kappa 0,25–0,26) y con SECOP en el 14 %. En un control ciego de 60 contratos, 24 de los 47 desacuerdos son etiquetas humanas que no encajan con la guía (`reports/gold_control_ciego_revision.csv`; esa revisión la hizo Claude, que es parte interesada; el segundo anotador humano revisó 17 de esos 24 contratos y no coincidió con la primera etiqueta en ninguno). Por eso se reporta contra dos referencias: **H** (humana, 215) y **C** (consenso de las dos anotaciones de Claude, 208). Ninguna es una verdad de referencia limpia: H es ruidosa y C no es humana y excluye los casos ambiguos.
+**Confiabilidad: la tarea es subjetiva.** Las dos anotaciones de Claude coinciden entre sí en el 72,6 % de los contratos (kappa 0,72); la anotación humana coincide con cada una de ellas en el 27 % (kappa 0,25–0,26), y dos anotadores humanos entre sí en el 22,4 % (kappa 0,20, y 0,41 a nivel de segmento). Elegir una entre 420 familias, muchas cercanas, admite más de una lectura razonable de la guía: los anotadores suelen coincidir en el área y diferir en la familia exacta. En un control ciego de 60 contratos hubo 47 desacuerdos entre la anotación humana y Claude Fable: 23 defendibles de lado y lado y 24 en los que las dos anotaciones aplican la guía de forma distinta (`reports/gold_control_ciego_revision.csv`, clasificación hecha por Claude). El segundo anotador anotó 17 de esos 24 y en 13 eligió una tercera familia. Por eso se reporta contra dos referencias: **H** (humana, 215) y **C** (consenso de las dos anotaciones de Claude, 208). Ninguna es una verdad única: en H pesa la variación natural entre anotadores, y C no es humana y excluye los casos ambiguos.
 
 | Medida | H: humana (215) | C: consenso de Claude (208) | H y C coinciden (48) |
 |---|---|---|---|
@@ -130,7 +130,7 @@ El gold set tiene 300 contratos fuera del entrenamiento. 215 tienen etiqueta hum
 - Lo firme: casi todo lo declarado en 8011 en la muestra corresponde a otra familia, con cualquier referencia.
 - Lo abierto: la exactitud del modelo a nivel de familia está entre 0,27 y 0,55 según la referencia (0,23 y 0,48 con B).
 - Plausibilidad de la explicación (F1 de palabras frente a las palabras clave humanas): 0,293 vs. 0,177 al azar.
-- Kappa Claude–humano = 0,25, por debajo de la compuerta de 0,61 que se había fijado para el paso 09. Como ese gold humano resultó poco confiable, la corrección de etiquetas se probó con otra regla, fijada antes de correr (ver "Entrenar con las etiquetas de 8011 corregidas").
+- Kappa Claude–humano = 0,25, por debajo de la compuerta de 0,61 que se había fijado para el paso 09. Como la tarea resultó muy subjetiva y el acuerdo entre anotadores fue bajo, la corrección de etiquetas se probó con otra regla, fijada antes de correr (ver "Entrenar con las etiquetas de 8011 corregidas").
 - Los textos estilo pyme de `data/llm/aumentado.jsonl` no dependen de esa compuerta y se probaron aparte (`scripts/14_prueba_textos_pyme.py` → `reports/prueba_textos_pyme.json`): el macro-F1 balanceado sube de 0,407 a 0,424, el gold queda igual (0,481 → 0,476 contra el consenso de Claude) y con las consultas de pyme la familia del proceso relevante queda en el top-3 en 56,8 % frente a 60,4 % sin ellos. Es un resultado negativo: esos textos no se usan. La prueba se hizo sobre B.
 
 ### El modelo de la app: entrenar con las etiquetas de 8011 corregidas (paso 15)
@@ -146,7 +146,7 @@ Claude Sonnet 5.5 re-etiquetó, con la guía del gold set y sin ver el código d
 
 D cumple la regla y mejora contra las tres referencias, incluida la humana (prueba de signos: p = 0,002, 0,004 y 0,02). **Desde el 24-nov-2026 la app usa D** (`models/familia_v2`). Claude no predice en la app: solo corrigió etiquetas de entrenamiento. Salvedades:
 
-- El maestro y dos de los árbitros son modelos de Claude; la mejora contra la etiqueta humana (11 contra 2) es la única evidencia sin Claude, y esa referencia es ruidosa.
+- El maestro y dos de los árbitros son modelos de Claude; la mejora contra la etiqueta humana (11 contra 2) es la única evidencia sin Claude, y en esa referencia pesa la variación entre anotadores.
 - D casi nunca predice 8011, así que su acuerdo con SECOP en el test natural baja de 0,397 a 0,216 y sus alertas suben de 1.640 a 3.004.
 - Ningún modelo reconoce bien un contrato que sí es de personal temporal, el uso correcto de 8011: en el entrenamiento de D solo quedan 36 ejemplos de esa familia.
 
@@ -298,7 +298,7 @@ Detalle, comandos y controles en [`llm/README.md`](llm/README.md).
 - Cerca de la mitad de las alertas de la app (1.437 de 3.004) no tiene revisión humana, y la app no reconoce bien los contratos que sí son de personal temporal (8011).
 - La evaluación de la búsqueda con el modelo de la app reutiliza juicios hechos con el modelo anterior (cotas inferiores).
 - Se usan 300.000 contratos de 1,9 millones, los primeros que entrega la API y no una muestra aleatoria; 315 de las 358 familias tienen menos de 300 contratos.
-- El gold set es pequeño (300) y su parte humana resultó poco confiable (kappa 0,20 entre los dos anotadores humanos); la referencia alternativa no es humana. Por eso la exactitud del modelo se reporta como un rango.
+- El gold set es pequeño (300) y la tarea es subjetiva: dos anotadores humanos coinciden con kappa 0,20 en la familia; la referencia alternativa no es humana. Por eso la exactitud del modelo se reporta como un rango.
 - Las 30 consultas de búsqueda y la revisión de 100 alertas las hizo una sola persona.
 - El lematizador de spaCy comete errores en algunas palabras ("área" → "areo"); se usa el modelo `es_core_news_sm` 3.7 con spaCy 3.8.
 - Al quitar las fórmulas aparecen atajos de oficina y municipio; con entidades nuevas el desempeño cae.
