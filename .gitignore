@@ -21,3 +21,4 @@ data/gold/correcciones_gold*.xlsx
 # Skills de agentes (enlaces a .venv, no sirven fuera de esta máquina)
 .agents/
 .claude/
+dist/

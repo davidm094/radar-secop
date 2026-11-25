@@ -1,10 +1,12 @@
 """Paso 8 (índice): prepara los procesos publicados para la búsqueda.
 - texto = nombre + descripción del procedimiento
 - familia = la del código declarado; si viene UNSPECIFIED, la infiere el clasificador (marcada)
-Salidas: data/processed/procesos_idx.parquet y procesos_emb.npy"""
+- TF-IDF de los procesos ya calculado, para que la app no lo ajuste al arrancar
+Salidas: data/processed/procesos_idx.parquet, procesos_tfidf.joblib y procesos_emb.npy"""
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import joblib
 import numpy as np
 import pandas as pd
 from radar.config import DATA_RAW, DATA_PROC, MODELO_APP
@@ -24,6 +26,9 @@ sin = p.fam.isna()
 p.loc[sin, "fam"] = m.predict(p.loc[sin, "txt_lem"])
 p["familia_inferida"] = sin
 p["precio_base"] = pd.to_numeric(p.precio_base, errors="coerce")
-p.to_parquet(DATA_PROC / "procesos_idx.parquet")
+from sklearn.feature_extraction.text import TfidfVectorizer
+vec = TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True, max_features=200_000)
+joblib.dump((vec, vec.fit_transform(p.txt_lem)), DATA_PROC / "procesos_tfidf.joblib", compress=3)
+p.drop(columns=["txt_lem"]).to_parquet(DATA_PROC / "procesos_idx.parquet")
 np.save(DATA_PROC / "procesos_emb.npy", _encoder().encode(p.texto.tolist()).astype("float32"))
 print(f"Procesos indexados: {len(p):,} | familia inferida por el modelo: {sin.mean():.1%}")

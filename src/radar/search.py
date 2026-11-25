@@ -16,8 +16,40 @@ MODELO_EMB = "minishlab/potion-multilingual-128M"
 
 
 def _encoder():
+    """Codificador completo de model2vec. Se usa para indexar todos los procesos (scripts/07)."""
     from model2vec import StaticModel
     return StaticModel.from_pretrained(MODELO_EMB)
+
+
+class EncoderLigero:
+    """El mismo codificador, para consultas sueltas y con poca memoria (lo usa la app).
+
+    Un modelo de model2vec sin pesos por token es: tokenizar, promediar las filas de la matriz de embeddings
+    y normalizar. Aquí la matriz (512 MB) se lee del disco con memmap, así que solo se cargan las filas de
+    los tokens de la consulta. Da los mismos vectores que _encoder().encode (lo comprueba tests/test_basico.py
+    cuando el modelo está descargado).
+    """
+
+    def __init__(self):
+        import json
+        from huggingface_hub import hf_hub_download
+        from tokenizers import Tokenizer
+        self.tok = Tokenizer.from_file(hf_hub_download(MODELO_EMB, "tokenizer.json"))
+        self.unk = self.tok.token_to_id("[UNK]") if self.tok.token_to_id("[UNK]") is not None else self.tok.token_to_id("<unk>")
+        ruta = hf_hub_download(MODELO_EMB, "model.safetensors")
+        with open(ruta, "rb") as f:                       # formato safetensors: 8 bytes con el largo de la cabecera JSON
+            n = int.from_bytes(f.read(8), "little")
+            meta = json.loads(f.read(n))["embeddings"]
+        assert meta["dtype"] == "F32"
+        self.E = np.memmap(ruta, dtype="<f4", mode="r", offset=8 + n + meta["data_offsets"][0], shape=tuple(meta["shape"]))
+
+    def encode(self, textos: list[str]) -> np.ndarray:
+        out = np.zeros((len(textos), self.E.shape[1]), dtype="float32")
+        for i, e in enumerate(self.tok.encode_batch_fast(list(textos), add_special_tokens=False)):
+            ids = [t for t in e.ids if t != self.unk][:512]
+            if ids:
+                out[i] = np.asarray(self.E[ids]).mean(axis=0)
+        return out / (np.linalg.norm(out, axis=1, keepdims=True) + 1e-32)
 
 
 def _unit(E):
@@ -25,14 +57,27 @@ def _unit(E):
 
 
 class BuscadorProcesos:
-    def __init__(self, procesos: pd.DataFrame, textos_preparados: list[str], textos_crudos: list[str],
-                 embeddings: np.ndarray | None = None):
+    def __init__(self, procesos: pd.DataFrame, textos_preparados: list[str] | None, textos_crudos: list[str] | None,
+                 embeddings: np.ndarray | None = None, tfidf=None, ligero: bool = True):
+        """tfidf = (vectorizador, matriz) ya calculados (scripts/07 los guarda); si no, se ajustan aquí."""
         self.p = procesos.reset_index(drop=True)
-        self.tfidf = TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True, max_features=200_000)
-        self.Xt = self.tfidf.fit_transform(textos_preparados)
-        self.enc = _encoder()
-        self.Xe = _unit(embeddings if embeddings is not None else self.enc.encode(list(textos_crudos)))
+        if tfidf is not None:
+            self.tfidf, self.Xt = tfidf
+        else:
+            self.tfidf = TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True, max_features=200_000)
+            self.Xt = self.tfidf.fit_transform(textos_preparados)
+        self.enc = EncoderLigero() if ligero else _encoder()
+        self.Xe = _unit(embeddings if embeddings is not None else _encoder().encode(list(textos_crudos)))
         self.fam = self.p["fam"].fillna("").values
+
+    @classmethod
+    def desde_disco(cls, carpeta):
+        """Carga el índice que deja scripts/07: procesos_idx.parquet, procesos_tfidf.joblib y procesos_emb.npy."""
+        import joblib
+        from pathlib import Path
+        carpeta = Path(carpeta)
+        return cls(pd.read_parquet(carpeta / "procesos_idx.parquet"), None, None,
+                   embeddings=np.load(carpeta / "procesos_emb.npy"), tfidf=joblib.load(carpeta / "procesos_tfidf.joblib"))
 
     def buscar(self, consulta_cruda: str, consulta_preparada: str, probs_familia: dict[str, float],
                k: int = 10, w_emb: float = 0.5, w_tfidf: float = 0.3, w_fam: float = 0.2,

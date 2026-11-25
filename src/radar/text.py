@@ -57,7 +57,9 @@ def limpiar(texto: str) -> str:
 @lru_cache(maxsize=1)
 def _nlp():
     import spacy
-    return spacy.load("es_core_news_sm", disable=["parser", "ner"])
+    from .config import MODELS
+    local = MODELS / "es_core_news_sm" / "es_core_news_sm-3.7.0"   # lo deja radar.demo cuando el paquete no está instalado
+    return spacy.load(local if local.exists() else "es_core_news_sm", disable=["parser", "ner"])
 
 
 def lematizar(textos, batch_size: int = 1000, n_process: int = 1) -> list[str]:

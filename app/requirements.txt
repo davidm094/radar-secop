@@ -1,0 +1,14 @@
+# Dependencias de la demo desplegada (Streamlit Community Cloud lee este archivo porque está junto a app.py).
+# Son las versiones de requirements-lock.txt, solo lo que la app necesita para correr. Python 3.13.
+# El modelo de spaCy (es_core_news_sm 3.7.0) no va aquí: lo descarga la app (src/radar/demo.py).
+# Para trabajar con el repo completo use requirements-lock.txt de la raíz.
+numpy==2.5.3
+pandas==3.0.5
+pyarrow==26.0.0
+scikit-learn==1.9.1
+joblib==1.6.0
+spacy==3.8.16
+tokenizers==0.23.3
+huggingface_hub==2.4.0
+streamlit==1.66.0
+requests==2.34.2

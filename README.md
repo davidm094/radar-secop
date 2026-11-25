@@ -69,6 +69,7 @@ Esto cambia el diseño del proyecto:
  14 prueba con textos estilo pyme generados por Claude (resultado negativo; no cambia el modelo)
  15 destilación: las etiquetas de 8011 del entrenamiento las corrige Claude → modelo de la app (familia_v2)
  16 control del umbral de alertas en un conjunto de validación aparte
+ 17 empaquetar el modelo y el índice para el despliegue (Release de GitHub `demo-v2`)
           │
  app/ Streamlit: "Para pymes" · "Revisar un contrato" · "Alertas para veedurías" · "Cómo funciona"
 ```
@@ -206,6 +207,12 @@ Se fija el modelo de spaCy 3.7.0 porque es con el que se calcularon las cifras (
 que trae el repo y sáltese los pasos 01 y 02 (SECOP cambia a diario, así que descargar de nuevo da otras cifras):
 
 ```bash
+streamlit run app/app.py                    # si faltan el modelo y el índice, los descarga ya construidos (unos 300 MB)
+```
+
+Eso basta para ver la demo. Para generar el modelo y el índice en vez de descargarlos:
+
+```bash
 python scripts/preparar_demo.py             # hace los tres pasos de abajo solo si faltan (unos 25 min la primera vez)
 streamlit run app/app.py
 ```
@@ -250,14 +257,18 @@ python scripts/10_evaluar_busqueda.py reevaluar                 # rankings con e
 
 Pruebas básicas (limpieza de texto, gold fuera del entrenamiento, coherencia de los reportes): `python tests/test_basico.py`.
 
-Los modelos y el índice no se suben al repositorio porque pesan más de 100 MB; se regeneran con los pasos 03, 15 y 07. Los resultados (métricas, explicaciones, discrepancias) quedan en `reports/`.
+Los modelos y el índice no se suben al repositorio porque pesan más de 100 MB; se regeneran con los pasos 03, 15 y 07.
+
+### Despliegue desde el repo
+
+La app corre directo desde un clon, sin entrenar: al arrancar copia los datos congelados y descarga el modelo de la app y el índice de procesos del Release [`demo-v2`](https://github.com/davidm094/radar-secop/releases/tag/demo-v2) (`src/radar/demo.py`). Esos archivos salen de `scripts/17_empaquetar_demo.py`, que antes de escribirlos comprueba que el modelo en 32 bits da la misma familia y las mismas alertas que el original en todo el test. Para Streamlit Community Cloud: repo `davidm094/radar-secop`, archivo `app/app.py`, Python 3.13; las dependencias de la demo están en `app/requirements.txt`. Para que quepa en la memoria de un servicio gratuito, la app lee el TF-IDF de los procesos ya calculado y codifica las consultas con una versión ligera del mismo modelo de embeddings (`EncoderLigero`), que da los mismos rankings. Los resultados (métricas, explicaciones, discrepancias) quedan en `reports/`.
 
 ## Estructura
 
 ```
 src/radar/      config · data (descarga SODA y catálogo) · text (limpieza y lematización) · labels (niveles,
                 split, balanceo, exclusión del gold) · model · evaluate (métricas y ECE) · explain · search
-scripts/        00–16, un paso del pipeline cada uno (00 = datos congelados, 11 = revisión de discrepancias,
+scripts/        00–17, un paso del pipeline cada uno (00 = datos congelados, 11 = revisión de discrepancias,
                 12 = clave del gold set, 13 = evaluación final contra el gold con dos referencias,
                 14 = prueba con textos estilo pyme, 15 = destilación de 8011, 16 = validación del umbral)
 app/app.py      demo en Streamlit

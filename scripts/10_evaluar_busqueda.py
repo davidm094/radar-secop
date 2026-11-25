@@ -42,8 +42,7 @@ def rankings(k: int = 10) -> pd.DataFrame:
     q = (pd.read_excel(xl, dtype=str) if xl.exists() else
          pd.read_csv(C / "consultas_pyme.csv", dtype=str, sep=None, engine="python", encoding="utf-8-sig"))
     q = q.dropna(subset=["consulta"])
-    p = pd.read_parquet(DATA_PROC / "procesos_idx.parquet")
-    B = BuscadorProcesos(p, p.txt_lem.tolist(), p.texto.tolist(), embeddings=np.load(DATA_PROC / "procesos_emb.npy"))
+    B = BuscadorProcesos.desde_disco(DATA_PROC)
     m = cargar(MODELO_APP)
     filas = []
     for r in q.itertuples():

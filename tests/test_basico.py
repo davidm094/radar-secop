@@ -52,6 +52,20 @@ def test_reportes_coherentes():
     t = json.loads((ROOT / "reports" / "discrepancias_revision_resumen.json").read_text(encoding="utf-8"))["traslado_al_modelo_de_la_app"]
     assert t["alertas_del_modelo_de_la_app"] == len(d) and t["revisadas_que_siguen_con_la_misma_familia"] == 94
 
+
+def test_encoder_ligero_igual_a_model2vec():
+    """El codificador de consultas de la app da los mismos vectores que model2vec (se salta si no está instalado)."""
+    try:
+        from radar.search import EncoderLigero, _encoder
+        a, b = EncoderLigero(), _encoder()
+    except Exception as e:   # sin red o sin model2vec
+        print("  (omitida:", type(e).__name__, ")")
+        return
+    import numpy as np
+    q = ["mantenimiento de aires acondicionados para oficinas", "vendo ropa por internet", "asesoría jurídica y contable", ""]
+    assert np.allclose(a.encode(q), b.encode(q), atol=1e-6)
+
+
 if __name__ == "__main__":
     for nombre, f in list(globals().items()):
         if nombre.startswith("test_"):

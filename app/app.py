@@ -1,8 +1,8 @@
 """Radar SECOP – demo en Streamlit.
 
 Ejecutar desde la raíz del repo:  streamlit run app/app.py
-Requiere el modelo (scripts/15) y el índice de procesos (scripts/07); con datos congelados, antes scripts/00.
-Lo más fácil: python scripts/preparar_demo.py
+Si faltan el modelo o el índice de procesos, los descarga ya construidos (src/radar/demo.py), así que corre
+directo desde un clon del repo. Para generarlos en vez de descargarlos: python scripts/preparar_demo.py
 """
 import json
 import sys
@@ -17,6 +17,7 @@ import streamlit as st
 
 from radar.config import DATA_PROC, REPORTS, MODELO_APP
 from radar.data import familias_unspsc, segmentos_unspsc
+from radar.demo import asegurar_artefactos
 from radar.explain import local, Vecinos
 from radar.model import cargar
 from radar.search import BuscadorProcesos
@@ -63,9 +64,7 @@ def aviso_segmento(P: np.ndarray):
 
 @st.cache_resource(show_spinner="Cargando procesos publicados…")
 def buscador():
-    p = pd.read_parquet(DATA_PROC / "procesos_idx.parquet")
-    emb = np.load(DATA_PROC / "procesos_emb.npy")
-    return BuscadorProcesos(p, p.txt_lem.tolist(), p.texto.tolist(), embeddings=emb)
+    return BuscadorProcesos.desde_disco(DATA_PROC)
 
 
 def nombre(fam: str) -> str:
@@ -83,6 +82,8 @@ def grafico_explicacion(exp: pd.DataFrame):
                "Es la contribución exacta de cada término en el modelo lineal.")
 
 
+with st.spinner("Preparando la demo. La primera vez descarga el modelo y el índice (uno o dos minutos)…"):
+    asegurar_artefactos(lambda mensaje: None)   # copia los datos congelados y descarga lo que falte
 MODELO, NOMBRES, VECINOS, SEGMENTOS = recursos()
 
 st.title("Radar SECOP")
