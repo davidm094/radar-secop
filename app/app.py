@@ -29,57 +29,67 @@ st.set_page_config(page_title="Radar SECOP", page_icon="🧭", layout="wide")
 UMBRAL_APP = 0.70   # umbral calibrado (ver reports/explicabilidad.json)
 UMBRAL_DUDA = 0.35  # por debajo, la familia es dudosa y se muestra también el segmento (2 dígitos)
 N_TEST = 36_844     # contratos de test sobre los que se calculan las alertas
-ACENTO, VERDE, AMBAR, GRIS = "#C8553D", "#2F6F5E", "#B7791F", "#8A94A0"
+ACENTO, GRIS = "#1F4FD8", "#8793A8"
 
 st.html("""
 <style>
-.block-container {max-width: 1180px; padding-top: 2.2rem; padding-bottom: 3rem;}
-.rs-eyebrow {font-size:.78rem; letter-spacing:.09em; text-transform:uppercase; color:#C8553D; font-weight:600; margin:0;}
-.rs-h1 {font-size:2.3rem; font-weight:700; color:#1F2A37; margin:.15rem 0 .35rem 0; line-height:1.15;}
-.rs-lead {font-size:1.06rem; color:#4A5562; margin:0 0 1rem 0; max-width:820px;}
-.rs-chips {display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:.6rem;}
-.rs-chip {background:#F6F4F1; border:1px solid #E7E2DB; border-radius:999px; padding:.28rem .8rem; font-size:.85rem; color:#4A5562;}
-.rs-chip b {color:#1F2A37;}
-.rs-pasos {display:grid; grid-template-columns:repeat(3,1fr); gap:.8rem; margin:.4rem 0 1.1rem 0;}
-.rs-paso {background:#F6F4F1; border-radius:10px; padding:.85rem 1rem; display:flex; gap:.75rem; align-items:flex-start;}
-.rs-num {flex:none; width:1.7rem; height:1.7rem; border-radius:50%; background:#C8553D; color:#fff; font-weight:700;
-         display:flex; align-items:center; justify-content:center; font-size:.9rem;}
-.rs-paso p {margin:0; font-size:.9rem; color:#4A5562; line-height:1.35;}
-.rs-paso b {display:block; color:#1F2A37; font-size:.95rem; margin-bottom:.1rem;}
-.rs-sec {font-size:1.25rem; font-weight:700; color:#1F2A37; margin:1.5rem 0 .15rem 0;}
-.rs-sub {font-size:.92rem; color:#5B6673; margin:0 0 .7rem 0;}
-.rs-cards {display:grid; grid-template-columns:repeat(3,1fr); gap:.8rem;}
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+:root {--tinta:#0B1220; --gris:#566074; --linea:#D5DBE5; --fondo:#F2F4F8; --azul:#1F4FD8; --mono:'IBM Plex Mono', ui-monospace, monospace;}
+.block-container {max-width: 1200px; padding-top: 1.6rem; padding-bottom: 3rem;}
+.rs, .rs * {font-family:'IBM Plex Sans', system-ui, sans-serif;}
+.rs-cab {background:var(--tinta); color:#fff; padding:1.7rem 1.9rem 0 1.9rem; border-bottom:4px solid var(--azul);}
+.rs-eyebrow {font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:#8FB0FF; margin:0;}
+.rs-h1 {font-size:2.5rem; font-weight:700; color:#fff; margin:.35rem 0 .45rem 0; line-height:1.05; letter-spacing:-.02em;}
+.rs-lead {font-size:1.02rem; color:#C9D2E3; margin:0 0 1.4rem 0; max-width:780px; line-height:1.5;}
+.rs-datos {display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid #2A3550;}
+.rs-dato {padding:.8rem 1rem .9rem 0; border-right:1px solid #2A3550; margin-right:1rem;}
+.rs-dato:last-child {border-right:0;}
+.rs-dato b {display:block; font-family:var(--mono); font-size:1.35rem; font-weight:600; color:#fff; line-height:1.15;}
+.rs-dato span {font-size:.8rem; color:#9AA7C0;}
+.rs-pasos {display:grid; grid-template-columns:repeat(3,1fr); gap:1.4rem; margin:.5rem 0 1.2rem 0;}
+.rs-paso {border-top:2px solid var(--tinta); padding-top:.55rem;}
+.rs-num {font-family:var(--mono); font-size:.8rem; font-weight:600; color:var(--azul); letter-spacing:.06em;}
+.rs-paso p {margin:.15rem 0 0 0; font-size:.9rem; color:var(--gris); line-height:1.4;}
+.rs-paso b {display:block; color:var(--tinta); font-size:1rem; font-weight:600; margin-bottom:.1rem;}
+.rs-sec {font-size:1.2rem; font-weight:700; color:var(--tinta); margin:1.7rem 0 .15rem 0; padding-top:.7rem; border-top:1px solid var(--linea); letter-spacing:-.01em;}
+.rs-sec i {font-style:normal; font-family:var(--mono); color:var(--azul); font-size:.95rem; margin-right:.55rem;}
+.rs-sub {font-size:.9rem; color:var(--gris); margin:0 0 .8rem 0;}
+.rs-cards {display:grid; grid-template-columns:repeat(3,1fr); gap:0; border:1px solid var(--linea);}
 .rs-cards.dos {grid-template-columns:repeat(2,1fr);}
-.rs-card {border:1px solid #E3E6EA; border-radius:12px; padding:1rem 1.1rem; background:#fff;}
-.rs-card.top {border-color:#C8553D; box-shadow:0 0 0 1px #C8553D inset;}
-.rs-tag {font-size:.74rem; letter-spacing:.06em; text-transform:uppercase; color:#5B6673; font-weight:600; margin:0;}
-.rs-card.top .rs-tag {color:#C8553D;}
-.rs-fam {font-size:1.02rem; font-weight:600; color:#1F2A37; margin:.3rem 0 .6rem 0; line-height:1.3; min-height:2.6em;}
-.rs-cod {color:#5B6673; font-weight:500;}
-.rs-pct {font-size:1.9rem; font-weight:700; color:#1F2A37; line-height:1;}
-.rs-pct small {font-size:.8rem; font-weight:500; color:#5B6673; margin-left:.35rem;}
-.rs-bar {height:6px; background:#EEF0F2; border-radius:3px; margin-top:.55rem; overflow:hidden;}
-.rs-bar div {height:100%; background:#C8553D; border-radius:3px;}
-.rs-card:not(.top) .rs-bar div {background:#8A94A0;}
-.rs-kpis {display:grid; grid-template-columns:repeat(4,1fr); gap:.8rem; margin:.3rem 0 1rem 0;}
-.rs-kpi {border:1px solid #E3E6EA; border-radius:12px; padding:.85rem 1rem; background:#fff;}
-.rs-kpi .v {font-size:1.7rem; font-weight:700; color:#1F2A37; line-height:1.1;}
-.rs-kpi .l {font-size:.84rem; color:#5B6673; margin-top:.2rem; line-height:1.3;}
-.rs-veredicto {border-radius:12px; padding:1rem 1.2rem; margin:.4rem 0 .9rem 0; border:1px solid;}
-.rs-veredicto h4 {margin:0 0 .2rem 0; font-size:1.12rem;}
-.rs-veredicto p {margin:0; font-size:.95rem;}
-.rs-veredicto.revisar {background:#FFF7E6; border-color:#F0D9A8; color:#7A4F0C;}
-.rs-veredicto.ok {background:#EDF6F2; border-color:#BFDDD2; color:#1F5444;}
-.rs-veredicto.neutro {background:#F3F5F7; border-color:#DDE2E7; color:#3D4854;}
-.rs-nota {background:#F6F4F1; border-left:3px solid #C8553D; border-radius:0 8px 8px 0; padding:.7rem 1rem; font-size:.92rem;
-          color:#4A5562; margin:.3rem 0 1rem 0;}
-.rs-item {border-bottom:1px solid #EEF0F2; padding:.55rem 0;}
-.rs-item p {margin:0 0 .2rem 0; font-size:.9rem; color:#1F2A37; line-height:1.4;}
-.rs-item span {font-size:.8rem; color:#5B6673;}
-.rs-vacio {border:1px dashed #D5DAE0; border-radius:12px; padding:1.6rem; text-align:center; color:#5B6673; margin-top:1rem;}
-.rs-pie {border-top:1px solid #E3E6EA; margin-top:2.5rem; padding-top:.9rem; font-size:.82rem; color:#7B8591;}
-.rs-pie a {color:#5B6673;}
-@media (max-width: 760px) {.rs-pasos, .rs-cards, .rs-cards.dos, .rs-kpis {grid-template-columns:1fr;} .rs-h1 {font-size:1.8rem;}}
+.rs-card {padding:1rem 1.15rem 1.1rem 1.15rem; background:#fff; border-right:1px solid var(--linea);}
+.rs-card:last-child {border-right:0;}
+.rs-card.top {background:var(--fondo); box-shadow:inset 0 3px 0 var(--azul);}
+.rs-tag {font-family:var(--mono); font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--gris); margin:0;}
+.rs-card.top .rs-tag {color:var(--azul);}
+.rs-fam {font-size:1rem; font-weight:600; color:var(--tinta); margin:.4rem 0 .7rem 0; line-height:1.3; min-height:2.6em;}
+.rs-cod {font-family:var(--mono); color:var(--gris); font-weight:500; font-size:.92rem;}
+.rs-pct {word-spacing:-.4em; font-family:var(--mono); font-size:1.9rem; font-weight:600; color:var(--tinta); line-height:1;}
+.rs-pct small {word-spacing:normal; font-family:'IBM Plex Sans', sans-serif; font-size:.78rem; font-weight:400; color:var(--gris); margin-left:.45rem;}
+.rs-bar {height:4px; background:#DDE2EB; margin-top:.6rem;}
+.rs-bar div {height:100%; background:var(--azul);}
+.rs-card:not(.top) .rs-bar div {background:#8793A8;}
+.rs-kpis {display:grid; grid-template-columns:repeat(4,1fr); border-top:2px solid var(--tinta); border-bottom:1px solid var(--linea); margin:.3rem 0 .8rem 0;}
+.rs-kpi {padding:.8rem 1rem .9rem 0; border-right:1px solid var(--linea); margin-right:1rem;}
+.rs-kpi:last-child {border-right:0;}
+.rs-kpi .v {word-spacing:-.4em; font-family:var(--mono); font-size:1.6rem; font-weight:600; color:var(--tinta); line-height:1.15;}
+.rs-kpi .l {font-size:.82rem; color:var(--gris); margin-top:.2rem; line-height:1.35;}
+.rs-veredicto {padding:.9rem 1.1rem; margin:.4rem 0 1rem 0; border-left:5px solid; background:var(--fondo);}
+.rs-veredicto h4 {margin:0 0 .15rem 0; font-size:1.1rem; font-weight:700; letter-spacing:-.01em;}
+.rs-veredicto p {margin:0; font-size:.93rem; color:#2B3445;}
+.rs-veredicto.revisar {border-color:#D97706; background:#FFF6E0;} .rs-veredicto.revisar h4 {color:#92400E;}
+.rs-veredicto.ok {border-color:#0F7B5F; background:#E8F5F0;} .rs-veredicto.ok h4 {color:#0B5A46;}
+.rs-veredicto.neutro {border-color:#8793A8;} .rs-veredicto.neutro h4 {color:var(--tinta);}
+.rs-nota {border-left:5px solid var(--tinta); background:var(--fondo); padding:.75rem 1.1rem; font-size:.92rem; color:#2B3445; margin:.3rem 0 1.1rem 0;}
+.rs-item {border-bottom:1px solid var(--linea); padding:.55rem 0;}
+.rs-item p {margin:0 0 .2rem 0; font-size:.9rem; color:var(--tinta); line-height:1.4;}
+.rs-item span {font-size:.8rem; color:var(--gris);}
+.rs-vacio {border:1px dashed #B8C1D1; padding:1.5rem; text-align:center; color:var(--gris); margin-top:1rem; font-size:.95rem;}
+.rs-pie {border-top:2px solid var(--tinta); margin-top:2.6rem; padding-top:.8rem; font-size:.8rem; color:var(--gris);}
+.rs-pie a {color:var(--azul);}
+.stTabs [data-baseweb="tab-list"] {gap:1.6rem;}
+.stTabs [data-baseweb="tab"] p {font-weight:600; font-size:.95rem;}
+@media (max-width: 760px) {.rs-pasos, .rs-cards, .rs-cards.dos {grid-template-columns:1fr;} .rs-kpis, .rs-datos {grid-template-columns:repeat(2,1fr);}
+  .rs-card {border-right:0; border-bottom:1px solid var(--linea);} .rs-h1 {font-size:1.9rem;} .rs-cab {padding:1.2rem 1.1rem 0 1.1rem;}}
 </style>
 """)
 
@@ -133,12 +143,14 @@ def nombre(fam: str) -> str:
 
 
 def pasos(*items):
-    st.html('<div class="rs-pasos">' + "".join(
-        f'<div class="rs-paso"><div class="rs-num">{i}</div><p><b>{t}</b>{d}</p></div>' for i, (t, d) in enumerate(items, 1)) + "</div>")
+    st.html('<div class="rs rs-pasos">' + "".join(
+        f'<div class="rs-paso"><span class="rs-num">PASO {i:02d}</span><p><b>{t}</b>{d}</p></div>' for i, (t, d) in enumerate(items, 1)) + "</div>")
 
 
 def seccion(titulo: str, sub: str = ""):
-    st.html(f'<p class="rs-sec">{titulo}</p>' + (f'<p class="rs-sub">{sub}</p>' if sub else ""))
+    num, _, resto = titulo.partition(" · ") if titulo[:1].isdigit() else ("", "", titulo)
+    st.html(f'<div class="rs"><p class="rs-sec">{f"<i>{int(num):02d}</i>" if num else ""}{resto}</p>'
+            + (f'<p class="rs-sub">{sub}</p>' if sub else "") + "</div>")
 
 
 def tarjeta_familia(etiqueta: str, fam: str, valor: str, nota: str, barra: float | None, top: bool = False) -> str:
@@ -200,17 +212,18 @@ except FileNotFoundError:
 
 # ---------------------------------------------------------------- Encabezado
 st.html(f"""
-<p class="rs-eyebrow">Contratación pública de Colombia · SECOP II</p>
+<div class="rs rs-cab">
+<p class="rs-eyebrow">Contratación pública de Colombia / SECOP II</p>
 <h1 class="rs-h1">Radar SECOP</h1>
 <p class="rs-lead">Lee el texto de un contrato o la descripción de un negocio y dice a qué categoría del Estado
 corresponde, con las palabras que lo explican. Sirve para encontrar procesos donde vender y para revisar si un
 contrato está bien clasificado.</p>
-<div class="rs-chips">
-  <span class="rs-chip"><b>148.473</b> procesos publicados</span>
-  <span class="rs-chip"><b>175</b> categorías (familias UNSPSC)</span>
-  <span class="rs-chip"><b>{miles(len(A)) if A is not None else "–"}</b> contratos para revisar</span>
-  <span class="rs-chip">Datos de octubre de 2026</span>
-</div>""")
+<div class="rs-datos">
+  <div class="rs-dato"><b>148.473</b><span>procesos publicados</span></div>
+  <div class="rs-dato"><b>175</b><span>categorías (familias UNSPSC)</span></div>
+  <div class="rs-dato"><b>{miles(len(A)) if A is not None else "–"}</b><span>contratos para revisar</span></div>
+  <div class="rs-dato"><b>OCT 2026</b><span>fecha de los datos</span></div>
+</div></div>""")
 
 tab_pyme, tab_audit, tab_alertas, tab_info = st.tabs(
     [":material/search: Para pymes", ":material/fact_check: Revisar un contrato",
@@ -261,7 +274,7 @@ with tab_pyme:
         st.session_state["consulta_pyme"] = q
     q = st.session_state.get("consulta_pyme", "")       # la consulta se conserva al cambiar filtros o de pestaña
     if not q.strip():
-        st.html('<div class="rs-vacio">Escriba la descripción de su negocio o elija un ejemplo para ver los resultados.</div>')
+        st.html('<div class="rs rs-vacio">Escriba la descripción de su negocio o elija un ejemplo para ver los resultados.</div>')
     elif len(preparar(q).split()) < 2:
         st.warning("La descripción es muy corta. Escriba al menos qué vende o qué servicio presta y para quién.",
                    icon=":material/edit:")
@@ -271,7 +284,7 @@ with tab_pyme:
         orden = np.argsort(-P)[:3]
         seccion("1 · Su negocio encaja en estas categorías", f"Para: “{escape(q)}”")
         rotulos = ["Más probable", "Segunda opción", "Tercera opción"]
-        st.html('<div class="rs-cards">' + "".join(
+        st.html('<div class="rs rs-cards">' + "".join(
             tarjeta_familia(rotulos[k], MODELO.classes_[i], pct(P[i]), "de probabilidad", float(P[i]), top=(k == 0))
             for k, i in enumerate(orden)) + "</div>")
         aviso_segmento(P)
@@ -284,7 +297,7 @@ with tab_pyme:
                 st.write("**Contratos reales parecidos al suyo**")
                 v = VECINOS.buscar(qp, k=3)
                 st.html("".join(
-                    f'<div class="rs-item"><p>{escape(o[:230])}{"…" if len(o) > 230 else ""}</p>'
+                    f'<div class="rs rs-item"><p>{escape(o[:230])}{"…" if len(o) > 230 else ""}</p>'
                     f'<span>{escape(e)} · declarado en {escape(nombre(f))}</span></div>'
                     for o, e, f in zip(v.objeto_del_contrato, v.nombre_entidad, v.fam)))
                 st.caption("Son contratos ya firmados, con la categoría que declaró la entidad.")
@@ -347,7 +360,7 @@ with tab_audit:
     obj, cod = st.session_state.get("revision", ("", ""))
     digitos = "".join(ch for ch in cod.replace("V1.", "").replace("v1.", "") if ch.isdigit())
     if not obj.strip():
-        st.html('<div class="rs-vacio">Pegue un contrato o elija un ejemplo para ver la revisión.</div>')
+        st.html('<div class="rs rs-vacio">Pegue un contrato o elija un ejemplo para ver la revisión.</div>')
     elif len(digitos) < 4:
         st.warning("Escriba el código UNSPSC declarado (al menos los 4 primeros dígitos).", icon=":material/edit:")
     else:
@@ -370,8 +383,8 @@ with tab_audit:
                  "No se marca para revisión.")
         else:
             clase, titulo, texto = "ok", "El código coincide", "La categoría declarada es la misma que sugiere el texto del contrato."
-        st.html(f'<div class="rs-veredicto {clase}"><h4>{titulo}</h4><p>{texto}</p></div>')
-        st.html('<div class="rs-cards dos">'
+        st.html(f'<div class="rs rs-veredicto {clase}"><h4>{titulo}</h4><p>{texto}</p></div>')
+        st.html('<div class="rs rs-cards dos">'
                 + tarjeta_familia("Categoría declarada", fam_decl, escape(digitos[:8]), "código registrado", None)
                 + tarjeta_familia("Categoría que sugiere el texto", pred, pct(conf), "de confianza", conf, top=True) + "</div>")
         if fam_decl in NOMBRES and fam_decl not in MODELO.classes_:
@@ -391,10 +404,10 @@ with tab_alertas:
     if A is None:
         st.info("Falta la lista de alertas: corra scripts/06_discrepancias.py")
     else:
-        st.html('<div class="rs-nota"><b>Son contratos para revisar, no irregularidades.</b> Una discrepancia no prueba un '
+        st.html('<div class="rs rs-nota"><b>Son contratos para revisar, no irregularidades.</b> Una discrepancia no prueba un '
                 'error: muchas vienen de la costumbre de registrar casi todo contrato de servicios en la familia 8011 '
                 '(recursos humanos), cuando la guía oficial pide registrar el servicio que recibe la entidad.</div>')
-        st.html(f"""<div class="rs-kpis">
+        st.html(f"""<div class="rs rs-kpis">
 <div class="rs-kpi"><div class="v">{miles(len(A))}</div><div class="l">alertas entre {miles(N_TEST)} contratos analizados ({pct(len(A) / N_TEST, 1)})</div></div>
 <div class="rs-kpi"><div class="v">{miles(A.nombre_entidad.nunique())}</div><div class="l">entidades con al menos una alerta</div></div>
 <div class="rs-kpi"><div class="v">{pct((A.fam == "8011").mean())}</div><div class="l">de las alertas están declaradas en 8011</div></div>
@@ -439,7 +452,7 @@ with tab_alertas:
             fila = V.loc[op]
             d1, d2 = st.columns([1, 1], gap="large")
             with d1:
-                st.html('<div class="rs-cards dos">'
+                st.html('<div class="rs rs-cards dos">'
                         + tarjeta_familia("Declarada", fila.fam, "", "", None)
                         + tarjeta_familia("Sugerida", fila.pred, pct(fila.conf), "de confianza", float(fila.conf), top=True) + "</div>")
                 st.caption(f"{fila.nombre_entidad} · id en SECOP: {fila.id_contrato}")
@@ -495,6 +508,6 @@ with tab_info:
         "- **Límites.** Cerca de la mitad de las alertas no tiene revisión humana, y el modelo casi nunca sugiere 8011, "
         "así que no reconoce un contrato que sí sea de personal temporal.")
 
-st.html('<div class="rs-pie">Proyecto final de Procesamiento de Lenguaje Natural, Pontificia Universidad Javeriana · '
+st.html('<div class="rs rs-pie">Proyecto final de Procesamiento de Lenguaje Natural, Pontificia Universidad Javeriana · '
         'David Moreno y Dierick Brochero · Datos: SECOP II (datos.gov.co, CC BY-SA 4.0) y clasificador UNSPSC v14 de '
         'Colombia Compra Eficiente · <a href="https://github.com/davidm094/radar-secop" target="_blank">Código y documento en GitHub</a></div>')

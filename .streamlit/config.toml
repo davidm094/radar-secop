@@ -6,7 +6,12 @@ gatherUsageStats = false
 
 [theme]
 base = "light"
-primaryColor = "#C8553D"
+primaryColor = "#1F4FD8"
 backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F6F4F1"
-textColor = "#1F2A37"
+secondaryBackgroundColor = "#F2F4F8"
+textColor = "#0B1220"
+linkColor = "#1F4FD8"
+borderColor = "#D5DBE5"
+baseRadius = "2px"
+font = "'IBM Plex Sans':https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap, sans-serif"
+codeFont = "'IBM Plex Mono':https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap, monospace"
