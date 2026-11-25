@@ -7,11 +7,13 @@ Si los archivos ya existen (porque se corrieron los scripts), no descarga nada.
 """
 import os
 import shutil
+import threading
 
 from .config import DATA_PROC, DATA_RAW, MODELS, MODELO_APP, ROOT
 
 RELEASE = os.environ.get("RADAR_RELEASE_URL", "https://github.com/davidm094/radar-secop/releases/download/demo-v2/")
 INDICE = ["procesos_idx.parquet", "procesos_tfidf.joblib", "procesos_emb.npy"]
+TAMANOS = {"procesos_idx.parquet": 49794787, "procesos_tfidf.joblib": 43540925, "procesos_emb.npy": 152036480}   # bytes, Release demo-v2
 
 
 def _descargar(nombre: str, destino, aviso):
@@ -47,7 +49,15 @@ def _asegurar_spacy(aviso):
     whl.unlink()
 
 
+_CANDADO = threading.Lock()   # dos visitantes a la vez no deben descargar lo mismo
+
+
 def asegurar_artefactos(aviso=print):
+    with _CANDADO:
+        _asegurar(aviso)
+
+
+def _asegurar(aviso):
     _asegurar_spacy(aviso)
     cong = ROOT / "data" / "congelado"
     for nombre, carpeta in (("contratos_prep.parquet", DATA_PROC), ("unspsc_v14.parquet", DATA_RAW)):
@@ -56,10 +66,13 @@ def asegurar_artefactos(aviso=print):
     modelo = MODELS / f"{MODELO_APP}.joblib"
     if not modelo.exists():
         _descargar(modelo.name, modelo, aviso)
-    hay = [(DATA_PROC / n).exists() for n in INDICE]
-    if not any(hay):
-        for n in INDICE:
-            _descargar(n, DATA_PROC / n, aviso)
-    elif not all(hay):
+    # El índice son tres archivos que deben venir del mismo origen. Si falta alguno y los que hay son los del
+    # Release (mismo tamaño), es una descarga interrumpida y se completa; si son otros, los generó el paso 07.
+    hay = [n for n in INDICE if (DATA_PROC / n).exists()]
+    del_release = all((DATA_PROC / n).stat().st_size == TAMANOS[n] for n in hay)
+    if len(hay) < len(INDICE) and not del_release:
         raise FileNotFoundError("El índice de procesos está incompleto en data/processed/. Corra scripts/07_indexar_procesos.py "
                                 "o borre procesos_idx.parquet, procesos_tfidf.joblib y procesos_emb.npy para descargarlo.")
+    for n in INDICE:
+        if n not in hay:
+            _descargar(n, DATA_PROC / n, aviso)
