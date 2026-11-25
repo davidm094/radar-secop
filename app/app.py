@@ -35,7 +35,10 @@ st.html("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 :root {--tinta:#0B1220; --gris:#566074; --linea:#D5DBE5; --fondo:#F2F4F8; --azul:#1F4FD8; --mono:'IBM Plex Mono', ui-monospace, monospace;}
-.block-container {max-width: 1200px; padding-top: 1.6rem; padding-bottom: 3rem;}
+/* La barra superior de Streamlit (más alta en Streamlit Cloud) flota sobre la página: se deja transparente y se
+   reserva su altura para que no tape el encabezado. */
+.block-container {max-width: 1200px; padding-top: 4.25rem; padding-bottom: 3rem;}
+header[data-testid="stHeader"] {background: transparent;}
 .rs, .rs * {font-family:'IBM Plex Sans', system-ui, sans-serif;}
 .rs-cab {background:var(--tinta); color:#fff; padding:1.7rem 1.9rem 0 1.9rem; border-bottom:4px solid var(--azul);}
 .rs-eyebrow {font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:#8FB0FF; margin:0;}
