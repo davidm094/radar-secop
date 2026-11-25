@@ -9,7 +9,7 @@ Autores: David Moreno y Dierick Brochero.
 |---|---|
 | Documento final (13 páginas, marco de Ashmore et al., 2021) | [`documento_final.pdf`](documento_final.pdf) |
 | Pipeline y código | `scripts/` (un paso por script) y `src/radar/` |
-| Demo | `streamlit run app/app.py` (ver "Cómo correrlo") |
+| Demo | **https://radar-secop-nlp.streamlit.app** (desplegada desde este repo) o `streamlit run app/app.py` (ver "Cómo correrlo") |
 | Resultados | `reports/` |
 
 ## Problema y usuario
